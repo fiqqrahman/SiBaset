@@ -33,6 +33,25 @@
             </footer>
         </div>
     </div>
+    <script>
+    (() => {
+        const sidebar = document.getElementById('school-sidebar');
+        const backdrop = document.getElementById('school-sidebar-backdrop');
+        const open = document.getElementById('school-sidebar-open');
+        const close = document.getElementById('school-sidebar-close');
+        const setSidebar = visible => {
+            sidebar?.classList.toggle('-translate-x-full', !visible);
+            backdrop?.classList.toggle('hidden', !visible);
+            document.body.classList.toggle('overflow-hidden', visible);
+        };
+        open?.addEventListener('click', () => setSidebar(true));
+        close?.addEventListener('click', () => setSidebar(false));
+        backdrop?.addEventListener('click', () => setSidebar(false));
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') setSidebar(false);
+        });
+    })();
+    </script>
     @stack('scripts')
 </body>
 </html>
