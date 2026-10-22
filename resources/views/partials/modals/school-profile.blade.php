@@ -81,7 +81,7 @@
                 </button>
 
                 @auth
-                    <form method="POST" action="{{ route('logout') }}" class="flex-1">
+                    <form method="POST" action="" class="flex-1">
                         @csrf
 
                         <button type="submit"
