@@ -7,8 +7,6 @@
                         max-w-[calc(100%-65px)] rounded-2xl p-4">
 
             <div class="flex items-center gap-2">
-                <span class="h-2 w-2 rounded-full bg-zinc-900"></span>
-
                 <span
                     class="text-[10px] font-bold uppercase
                              tracking-[0.16em] text-zinc-500">
