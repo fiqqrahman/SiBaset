@@ -23,7 +23,7 @@
 
             <div class="hidden text-[10px] font-medium text-zinc-500
                         sm:block">
-                SISTEM INFORMASI ASET
+                Dinas Pendidikan Kota Palangka Raya
             </div>
         </div>
     </a>
@@ -32,7 +32,7 @@
 
     <div class="hidden min-w-0 lg:block">
         <div class="text-xs font-semibold text-zinc-800">
-            Pemetaan Aset Pendidikan
+            Sistem Informasi Pemetaan Barang dan Aset
         </div>
 
         <div class="mt-1 text-[10px] text-zinc-500">

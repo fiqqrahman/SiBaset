@@ -74,6 +74,8 @@
 
         @include('partials.modals.kib')
         @include('partials.modals.school-profile')
+        @include('partials.modals.users')
+        @include('partials.modals.policies')
 
     </div>
 
@@ -216,7 +218,7 @@
                 });
             });
 
-            [$('#kib-modal'), $('#profile-modal')].forEach(modal => {
+            [$('#kib-modal'), $('#profile-modal'), $('#users-modal'), $('#policies-modal')].forEach(modal => {
                 modal.addEventListener('click', event => {
                     if (event.target === modal) {
                         closeModal(modal);
@@ -797,6 +799,14 @@
 
             $('#profile-trigger').addEventListener('click', () => {
                 openModal($('#profile-modal'));
+            });
+
+            $('#open-users-modal').addEventListener('click', () => {
+                openModal($('#users-modal'));
+            });
+
+            $('#open-policies-modal').addEventListener('click', () => {
+                openModal($('#policies-modal'));
             });
 
             function updateClock() {

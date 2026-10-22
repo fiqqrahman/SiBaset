@@ -7,8 +7,6 @@
                         max-w-[calc(100%-65px)] rounded-2xl p-4">
 
             <div class="flex items-center gap-2">
-                <span class="h-2 w-2 rounded-full bg-zinc-900"></span>
-
                 <span
                     class="text-[10px] font-bold uppercase
                              tracking-[0.16em] text-zinc-500">
@@ -43,6 +41,21 @@
         </section>
 
         <div class="pointer-events-auto flex flex-col gap-2">
+
+            <button type="button" id="open-users-modal" class="map-control" aria-label="Manajemen pengguna" title="Manajemen pengguna" aria-haspopup="dialog" aria-controls="users-modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M20 8v6M23 11h-6" />
+                </svg>
+            </button>
+
+            <button type="button" id="open-policies-modal" class="map-control" aria-label="Kebijakan dan aspek hukum" title="Kebijakan dan aspek hukum" aria-haspopup="dialog" aria-controls="policies-modal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true">
+                    <path d="M12 3 20 6v5c0 5-3.5 8-8 10-4.5-2-8-5-8-10V6l8-3Z" />
+                    <path d="m9 12 2 2 4-4" />
+                </svg>
+            </button>
 
             <button type="button" id="zoom-in" class="map-control" aria-label="Perbesar peta" title="Perbesar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
