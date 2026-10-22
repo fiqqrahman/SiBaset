@@ -63,39 +63,6 @@
                     <path d="M3 4v7h7" />
                 </svg>
             </button>
-
-            <button type="button" id="toggle-layers" class="map-control" aria-label="Pengaturan layer peta"
-                aria-expanded="false" aria-controls="layer-panel" title="Layer peta">
-
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5">
-                    <path d="m12 3 9 5-9 5-9-5 9-5Z" />
-                    <path d="m3 12 9 5 9-5M3 16l9 5 9-5" />
-                </svg>
-            </button>
-
-            <div id="layer-panel" hidden class="glass-panel w-48 rounded-xl p-3">
-
-                <div class="text-xs font-bold">Tampilan Peta</div>
-
-                <label
-                    class="mt-3 flex cursor-pointer items-center
-                              gap-2 text-[11px] text-zinc-600">
-                    <input type="radio" name="map-layer" value="street" checked>
-                    OpenStreetMap
-                </label>
-
-                <label
-                    class="mt-2 flex cursor-pointer items-center
-                              gap-2 text-[11px] text-zinc-600">
-                    <input type="radio" name="map-layer" value="gray">
-                    Monokrom
-                </label>
-
-                <p class="mt-3 text-[9px] leading-4 text-zinc-400">
-                    Peta dasar dapat diubah sesuai layanan tile yang
-                    digunakan pada lingkungan produksi.
-                </p>
-            </div>
         </div>
     </div>
 

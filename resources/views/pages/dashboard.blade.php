@@ -790,30 +790,6 @@
                 }
             });
 
-            $('#toggle-layers').addEventListener('click', () => {
-                const panel = $('#layer-panel');
-                panel.hidden = !panel.hidden;
-
-                $('#toggle-layers').setAttribute(
-                    'aria-expanded',
-                    String(!panel.hidden)
-                );
-            });
-
-            $$('input[name="map-layer"]').forEach(input => {
-                input.addEventListener('change', () => {
-                    if (!input.checked) return;
-
-                    if (input.value === 'gray') {
-                        map.removeLayer(streetLayer);
-                        grayLayer.addTo(map);
-                    } else {
-                        map.removeLayer(grayLayer);
-                        streetLayer.addTo(map);
-                    }
-                });
-            });
-
             map.on('mousemove', event => {
                 $('#cursor-coordinates').textContent =
                     `${event.latlng.lat.toFixed(5)}, ${event.latlng.lng.toFixed(5)}`;

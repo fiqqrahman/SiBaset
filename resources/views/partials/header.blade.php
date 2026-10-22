@@ -71,14 +71,6 @@
         </div>
     </div>
 
-    <div class="hidden shrink-0 items-center gap-2 xl:flex">
-        <span class="h-2 w-2 rounded-full bg-zinc-800"></span>
-
-        <span class="text-[11px] font-medium text-zinc-600">
-            Kota Palangka Raya
-        </span>
-    </div>
-
     <div class="ml-auto flex shrink-0 items-center gap-2">
 
         <div class="hidden border-l border-zinc-200 pl-3 text-right
