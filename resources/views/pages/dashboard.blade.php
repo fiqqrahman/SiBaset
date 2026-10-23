@@ -82,6 +82,23 @@
 
 @endsection
 
+@push('styles')
+<style>
+    .sibaset-school-div-icon { background: transparent; border: 0; }
+    .sibaset-school-marker {
+        display: grid; place-items: center; width: 36px; height: 36px;
+        border: 2px solid rgba(255,255,255,.96); box-shadow: 0 2px 8px rgba(24,24,27,.25);
+        color: white;
+    }
+    .sibaset-school-marker svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+    .school-marker-tk { background: #a16207; border-radius: 50% 50% 50% 8px; transform: rotate(-45deg); }
+    .school-marker-tk svg { transform: rotate(45deg); }
+    .school-marker-sd { background: #2563eb; border-radius: 11px 11px 11px 4px; }
+    .school-marker-smp { background: #6d28d9; border-radius: 50% 50% 50% 4px; transform: rotate(-45deg); }
+    .school-marker-smp svg { transform: rotate(45deg); }
+</style>
+@endpush
+
 @push('scripts')
     <script>
         (() => {
@@ -92,6 +109,7 @@
              * Sekolah tanpa koordinat terverifikasi tidak akan dibuatkan marker.
              */
             const schools = {{ \Illuminate\Support\Js::from($schools ?? []) }};
+            const cityBoundary = {{ \Illuminate\Support\Js::from($cityBoundary ?? null) }};
 
             const canManageAssets =
                 {{ \Illuminate\Support\Js::from($canManageAssets ?? false) }};
@@ -129,6 +147,24 @@
 
             streetLayer.addTo(map);
 
+            if (cityBoundary) {
+                const boundaryLayer = L.geoJSON(cityBoundary, {
+                    interactive: false,
+                    style: {
+                        color: '#71717a',
+                        weight: 2,
+                        opacity: 0.9,
+                        fillColor: '#a1a1aa',
+                        fillOpacity: 0.035,
+                        dashArray: '5 5'
+                    }
+                }).addTo(map);
+                map.fitBounds(boundaryLayer.getBounds(), {
+                    padding: [42, 42],
+                    maxZoom: defaultZoom
+                });
+            }
+
             const markers = new Map();
             const schoolById = new Map();
 
@@ -147,7 +183,8 @@
                 Number(school.latitude) >= -90 &&
                 Number(school.latitude) <= 90 &&
                 Number(school.longitude) >= -180 &&
-                Number(school.longitude) <= 180
+                Number(school.longitude) <= 180 &&
+                !(Number(school.latitude) === 0 && Number(school.longitude) === 0)
             );
 
             schools.forEach(school => {
@@ -336,11 +373,39 @@
                 return wrapper;
             }
 
+            const educationMarkerConfig = {
+                TK: { className: 'school-marker-tk', title: 'TK', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5-8 4.5-8-4.5Z"/><path d="M7 10.2v5.1c3.2 2.4 6.8 2.4 10 0v-5.1M20 9v6"/></svg>' },
+                SD: { className: 'school-marker-sd', title: 'SD', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.7 0 8 2.1v12c-2.3-2.1-4.9-2.9-8-2.1v-12Z"/><path d="M20 5.5c-3.1-.8-5.7 0-8 2.1v12c2.3-2.1 4.9-2.9 8-2.1v-12Z"/></svg>' },
+                SMP: { className: 'school-marker-smp', title: 'SMP', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m2.5 9.2 9.5-5 9.5 5-9.5 5-9.5-5Z"/><path d="M6.5 11.4v4.2c3.6 2.3 7.4 2.3 11 0v-4.2M21.5 9.5v6"/></svg>' }
+            };
+
+            function createEducationMarker(school) {
+                const type = String(school.education_level || '').toUpperCase();
+                const config = educationMarkerConfig[type] || educationMarkerConfig.SD;
+                return L.divIcon({
+                    className: 'sibaset-school-div-icon',
+                    html: '<span class="sibaset-school-marker ' + config.className + '" title="' + config.title + '">' + config.svg + '</span>',
+                    iconSize: [38, 42],
+                    iconAnchor: [19, 39],
+                    popupAnchor: [0, -36]
+                });
+            }
+
+            function coordinateStatusLabel(status) {
+                return ({
+                    verified: 'Terverifikasi',
+                    pending: 'Perlu verifikasi',
+                    missing: 'Belum ada koordinat',
+                    needs_review: 'Perlu pemeriksaan',
+                    outside_boundary: 'Di luar wilayah'
+                })[status] || 'Perlu pemeriksaan';
+            }
+
             verifiedSchools.forEach(school => {
                 const marker = L.marker([
                     Number(school.latitude),
                     Number(school.longitude)
-                ]);
+                ], { icon: createEducationMarker(school), keyboard: true, title: school.name });
 
                 marker.bindPopup(() => createSchoolPopup(school), {
                     maxWidth: 280,
@@ -652,7 +717,7 @@
                             'span',
                             'shrink-0 rounded-md bg-zinc-100 px-2 py-1 ' +
                             'text-[9px] font-medium text-zinc-600',
-                            verified ? 'Terverifikasi' : 'Belum dipetakan'
+                            coordinateStatusLabel(school.location_status)
                         )
                     );
 
@@ -740,9 +805,7 @@
                         element(
                             'div',
                             'mt-1 text-[10px] text-zinc-500',
-                            school.location_status === 'verified' ?
-                            'Koordinat terverifikasi' :
-                            'Belum dipetakan'
+                            coordinateStatusLabel(school.location_status)
                         )
                     );
 
