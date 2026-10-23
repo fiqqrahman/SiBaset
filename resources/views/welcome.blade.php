@@ -176,17 +176,19 @@
         .role-pill svg { width: 14px; height: 14px; }
         .login-note { margin: 15px 0 0; color: #a1a1aa; font-size: 9px; line-height: 1.65; text-align: center; }
 
-        .features-section { padding: 24px 0 30px; border-top: 1px solid #e4e4e7; }
-        .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 17px; }
+        .features-section { margin-top: 28px; padding: 0; }
+        .section-heading { display: block; margin-bottom: 13px; }
         .section-kicker { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
-        .section-title { margin: 8px 0 0; font-size: 20px; font-weight: 800; letter-spacing: -.04em; }
-        .section-copy { max-width: 390px; color: #71717a; font-size: 11px; line-height: 1.7; }
-        .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
-        .feature-card { display: flex; gap: 13px; min-width: 0; padding: 18px; border: 1px solid #e4e4e7; border-radius: 16px; background: rgba(255,255,255,.72); }
-        .feature-icon { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 11px; background: #fff; color: #3f3f46; }
-        .feature-icon svg { width: 18px; height: 18px; }
-        .feature-title { margin: 1px 0 0; font-size: 11px; font-weight: 800; }
-        .feature-copy { margin: 6px 0 0; color: #71717a; font-size: 10px; line-height: 1.7; }
+        .section-title { margin: 7px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; line-height: 1.2; }
+        .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 10px; line-height: 1.65; }
+        .feature-grid { display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr); grid-template-rows: repeat(2, minmax(92px, auto)); gap: 9px; }
+        .feature-card { display: flex; gap: 10px; min-width: 0; padding: 13px; border: 1px solid #e4e4e7; border-radius: 15px; background: rgba(255,255,255,.72); }
+        .feature-card:first-child { grid-row: span 2; flex-direction: column; align-items: flex-start; padding: 15px; }
+        .feature-card:nth-child(2), .feature-card:nth-child(3) { align-items: flex-start; padding: 12px; }
+        .feature-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46; }
+        .feature-icon svg { width: 17px; height: 17px; }
+        .feature-title { margin: 1px 0 0; font-size: 10px; font-weight: 800; line-height: 1.45; }
+        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 9px; line-height: 1.65; }
 
         .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 19px 0 24px; border-top: 1px solid #e4e4e7; color: #a1a1aa; font-size: 10px; }
         .footer-brand { color: #71717a; font-weight: 700; }
@@ -221,11 +223,15 @@
             .map-preview { min-height: 190px; margin-top: 26px; border-radius: 18px; }
             .login-card { padding: 24px 21px; border-radius: 20px; }
             .login-title { margin-top: 22px; font-size: 24px; }
-            .features-section { padding-top: 20px; padding-bottom: 30px; }
+            .features-section { margin-top: 25px; }
             .section-heading { display: block; margin-bottom: 14px; }
             .section-copy { margin-top: 8px; }
-            .feature-grid { grid-template-columns: 1fr; gap: 9px; }
-            .feature-card { padding: 15px; }
+            .features-section { margin-top: 25px; }
+            .feature-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; gap: 9px; }
+            .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) {
+                grid-row: auto; flex-direction: row; align-items: flex-start; padding: 14px;
+            }
+            .feature-card:first-child { grid-column: auto; }
             .site-footer { align-items: flex-start; flex-direction: column; gap: 7px; padding: 17px 0 22px; }
         }
         @media (max-width: 380px) {
@@ -236,6 +242,7 @@
             .login-options { align-items: flex-start; }
             .map-float-card { right: 10px; bottom: 10px; min-width: 155px; padding: 9px; }
             .role-pills { grid-template-columns: 1fr; }
+            .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) { padding: 12px; }
         }
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
@@ -268,7 +275,47 @@
                 </div>
 
 
+        <section class="features-section bento-features" id="fitur" aria-labelledby="features-title">
+            <div class="section-heading">
+                <div>
+                    <div class="section-kicker">Fitur utama</div>
+                    <h2 class="section-title" id="features-title">Data penting, dalam satu ruang.</h2>
+                </div>
+                <p class="section-copy">Dirancang untuk mendukung informasi sekolah, inventaris aset, dan proses verifikasi dalam alur kerja yang lebih terstruktur.</p>
             </div>
+
+            <div class="feature-grid">
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
+                    </span>
+                    <span>
+                        <h3 class="feature-title">Peta persebaran sekolah</h3>
+                        <p class="feature-copy">Lihat informasi lokasi sekolah dan status koordinatnya melalui peta interaktif.</p>
+                    </span>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg>
+                    </span>
+                    <span>
+                        <h3 class="feature-title">Inventaris barang dan aset</h3>
+                        <p class="feature-copy">Ruang informasi untuk menata data aset sekolah dan detail inventarisnya.</p>
+                    </span>
+                </article>
+                <article class="feature-card">
+                    <span class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 7v5c0 4.5-3 7-8 9-5-2-8-4.5-8-9V7l8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
+                    </span>
+                    <span>
+                        <h3 class="feature-title">Verifikasi data</h3>
+                        <p class="feature-copy">Mendukung alur pemeriksaan perubahan data dan status koordinat sekolah.</p>
+                    </span>
+                </article>
+            </div>
+        </section>
+
+                        </div>
 
             <aside class="login-card" id="login" aria-labelledby="login-title">
                 <div class="login-topline">
@@ -335,45 +382,7 @@
             </aside>
         </section>
 
-        <section class="features-section" id="fitur" aria-labelledby="features-title">
-            <div class="section-heading">
-                <div>
-                    <div class="section-kicker">Fitur utama</div>
-                    <h2 class="section-title" id="features-title">Data penting, dalam satu ruang.</h2>
-                </div>
-                <p class="section-copy">Dirancang untuk mendukung informasi sekolah, inventaris aset, dan proses verifikasi dalam alur kerja yang lebih terstruktur.</p>
-            </div>
 
-            <div class="feature-grid">
-                <article class="feature-card">
-                    <span class="feature-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
-                    </span>
-                    <span>
-                        <h3 class="feature-title">Peta persebaran sekolah</h3>
-                        <p class="feature-copy">Lihat informasi lokasi sekolah dan status koordinatnya melalui peta interaktif.</p>
-                    </span>
-                </article>
-                <article class="feature-card">
-                    <span class="feature-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg>
-                    </span>
-                    <span>
-                        <h3 class="feature-title">Inventaris barang dan aset</h3>
-                        <p class="feature-copy">Ruang informasi untuk menata data aset sekolah dan detail inventarisnya.</p>
-                    </span>
-                </article>
-                <article class="feature-card">
-                    <span class="feature-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 3 20 7v5c0 4.5-3 7-8 9-5-2-8-4.5-8-9V7l8-4Z"/><path d="m9 12 2 2 4-4"/></svg>
-                    </span>
-                    <span>
-                        <h3 class="feature-title">Verifikasi data</h3>
-                        <p class="feature-copy">Mendukung alur pemeriksaan perubahan data dan status koordinat sekolah.</p>
-                    </span>
-                </article>
-            </div>
-        </section>
     </main>
 
     <footer class="site-footer page-shell">
