@@ -84,11 +84,12 @@
             </div>
         </div>
 
-        <button type="button"
+        <button type="button" id="open-notifications-modal"
             class="relative flex h-10 w-10 items-center justify-center
                        rounded-xl border border-zinc-200 bg-white
-                       text-zinc-600 hover:bg-zinc-50"
-            aria-label="Notifikasi" title="Notifikasi">
+                       text-zinc-600 transition hover:bg-zinc-50"
+            aria-label="Buka notifikasi" title="Notifikasi"
+            aria-haspopup="dialog" aria-expanded="false" aria-controls="notifications-modal">
 
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5"
                 aria-hidden="true">

@@ -76,6 +76,7 @@
         @include('partials.modals.school-profile')
         @include('partials.modals.users')
         @include('partials.modals.policies')
+        @include('partials.modals.notifications')
 
     </div>
 
@@ -200,6 +201,10 @@
                 modal.classList.remove('flex');
                 modal.setAttribute('aria-hidden', 'true');
 
+                if (modal.id === 'notifications-modal') {
+                    $('#open-notifications-modal')?.setAttribute('aria-expanded', 'false');
+                }
+
                 if (activeModal === modal) {
                     activeModal = null;
                 }
@@ -218,7 +223,13 @@
                 });
             });
 
-            [$('#kib-modal'), $('#profile-modal'), $('#users-modal'), $('#policies-modal')].forEach(modal => {
+            const notificationsTrigger = $('#open-notifications-modal');
+            notificationsTrigger?.addEventListener('click', () => {
+                openModal($('#notifications-modal'));
+                notificationsTrigger.setAttribute('aria-expanded', 'true');
+            });
+
+            [$('#kib-modal'), $('#profile-modal'), $('#users-modal'), $('#policies-modal'), $('#notifications-modal')].forEach(modal => {
                 modal.addEventListener('click', event => {
                     if (event.target === modal) {
                         closeModal(modal);

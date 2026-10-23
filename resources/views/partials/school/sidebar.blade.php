@@ -33,16 +33,6 @@
         <a href="{{ route('school.dashboard') }}#bantuan" class="flex items-center gap-3 rounded-xl px-3 py-3 text-xs font-semibold text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.2 1-1.8 1.4-1.8 3M12 17h.01"/></svg>Pusat Bantuan
         </a>
-        <a href="{{ route('dashboard') }}" class="mt-5 flex items-center gap-2 rounded-xl border border-zinc-200 px-3 py-2.5 text-[11px] font-semibold text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h12M3 4v16"/></svg>Kembali ke peta persebaran</a>
     </nav>
-
-    <div class="border-t border-zinc-100 p-4">
-        <div class="flex items-center gap-3 rounded-xl bg-zinc-50 p-3">
-            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-xs font-bold text-zinc-700 ring-1 ring-zinc-200">{{ strtoupper(substr(auth()->user()->name ?? 'OP', 0, 2)) }}</div>
-            <div class="min-w-0 flex-1"><div class="truncate text-xs font-bold text-zinc-800">{{ auth()->user()->name ?? 'Operator Sekolah' }}</div><div class="mt-1 text-[10px] text-zinc-500">Operator sekolah</div></div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4 shrink-0 text-zinc-400" aria-hidden="true"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
-        </div>
-        <p class="mt-2 px-1 text-[9px] leading-4 text-zinc-400">Perubahan data baru berlaku setelah diverifikasi dinas.</p>
-    </div>
 </aside>
 <div id="school-sidebar-backdrop" class="fixed inset-0 z-30 hidden bg-zinc-950/40 lg:hidden"></div>
