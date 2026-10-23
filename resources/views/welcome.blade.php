@@ -51,8 +51,8 @@
             display: grid; place-items: center; width: 44px; height: 44px; flex: 0 0 auto;
             border-radius: 14px; color: #fff; background: var(--ink);
         }
-        .brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.045em; line-height: 1.2; }
-        .brand-caption { margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+        .brand-name { display: block; font-size: 17px; font-weight: 800; letter-spacing: -.045em; line-height: 1.2; }
+        .brand-caption { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; line-height: 1.35; }
         .header-right { display: flex; align-items: center; gap: 24px; }
         .header-nav { display: flex; align-items: center; gap: 22px; color: #52525b; font-size: 12px; font-weight: 600; }
         .header-nav a:hover { color: var(--ink); }
@@ -138,8 +138,8 @@
             display: grid; place-items: center; width: 42px; height: 42px; flex: 0 0 auto;
             border: 1px solid #e4e4e7; border-radius: 13px; background: #fafafa; color: #27272a;
         }
-        .login-eyebrow { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
-        .login-context { margin-top: 5px; color: #52525b; font-size: 11px; }
+        .login-eyebrow { display: block; color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+        .login-context { display: block; margin-top: 5px; color: #52525b; font-size: 11px; }
         .login-title { position: relative; z-index: 1; margin: 27px 0 0; font-size: 26px; font-weight: 800; letter-spacing: -.045em; line-height: 1.2; }
         .login-copy { margin: 9px 0 0; color: #71717a; font-size: 12px; line-height: 1.7; }
         .login-form { position: relative; z-index: 1; margin-top: 25px; }
