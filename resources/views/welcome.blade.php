@@ -341,14 +341,14 @@
                 <form class="login-form" id="login-form">
                     <div class="field-group">
                         <label class="field-label" for="login-email">Email terdaftar</label>
-                        <input class="field-input" type="email" id="login-email" name="email"
+                        <input class="field-input" type="email" id="login-email"
                             placeholder="nama@instansi.go.id" autocomplete="username" required>
                     </div>
 
                     <div class="field-group">
                         <label class="field-label" for="login-password">Kata sandi</label>
                         <div class="field-wrap">
-                            <input class="field-input password-input" type="password" id="login-password" name="password"
+                            <input class="field-input password-input" type="password" id="login-password"
                                 placeholder="Masukkan kata sandi" autocomplete="current-password" required>
                             <button class="password-toggle" id="toggle-password" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false">
                                 <svg id="password-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -360,7 +360,7 @@
 
                     <div class="login-options">
                         <label class="remember-label" for="remember-login">
-                            <input type="checkbox" id="remember-login" name="remember">
+                            <input type="checkbox" id="remember-login">
                             Ingat saya
                         </label>
                         <button class="text-link" type="button" id="forgot-password">Lupa kata sandi?</button>
