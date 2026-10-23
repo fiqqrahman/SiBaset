@@ -8,3 +8,5 @@ Route::get('/', function () {
 
 Route::view('/dashboard', 'pages.dashboard')
     ->name('dashboard');
+
+require __DIR__.'/school.php';
