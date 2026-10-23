@@ -181,7 +181,7 @@
         .section-heading { display: block; margin-bottom: 13px; }
         .section-kicker { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
         .section-title { margin: 7px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; line-height: 1.2; }
-        .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 10px; line-height: 1.65; }
+        .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 11px; line-height: 1.65; }
         .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 9px; align-items: stretch; }
         .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) {
             display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
@@ -191,8 +191,8 @@
         .feature-card > span:last-child { display: block; min-width: 0; }
         .feature-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46; }
         .feature-icon svg { width: 16px; height: 16px; }
-        .feature-title { margin: 0; font-size: 9.5px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
-        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 8.5px; line-height: 1.65; }
+        .feature-title { margin: 0; font-size: 10.5px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 9.5px; line-height: 1.6; }
 
         .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 19px 0 24px; border-top: 1px solid #e4e4e7; color: #a1a1aa; font-size: 10px; }
         .footer-brand { color: #71717a; font-weight: 700; }
