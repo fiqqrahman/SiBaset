@@ -68,7 +68,7 @@
 
         .portal-layout {
             display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(350px, .84fr);
-            align-items: stretch; gap: clamp(32px, 5vw, 72px); padding: 48px 0 52px;
+            align-items: start; gap: clamp(32px, 5vw, 72px); padding: 30px 0 24px;
         }
         .intro { min-width: 0; padding: 12px 0 0; }
         .eyebrow {
@@ -176,7 +176,7 @@
         .role-pill svg { width: 14px; height: 14px; }
         .login-note { margin: 15px 0 0; color: #a1a1aa; font-size: 9px; line-height: 1.65; text-align: center; }
 
-        .features-section { padding: 0 0 54px; }
+        .features-section { padding: 24px 0 30px; border-top: 1px solid #e4e4e7; }
         .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 17px; }
         .section-kicker { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
         .section-title { margin: 8px 0 0; font-size: 20px; font-weight: 800; letter-spacing: -.04em; }
@@ -192,7 +192,6 @@
         .footer-brand { color: #71717a; font-weight: 700; }
 
         @media (min-width: 1100px) {
-            .portal-layout { min-height: 620px; }
             .login-card { margin-top: 0; }
         }
         @media (max-width: 900px) {
@@ -222,7 +221,7 @@
             .map-preview { min-height: 190px; margin-top: 26px; border-radius: 18px; }
             .login-card { padding: 24px 21px; border-radius: 20px; }
             .login-title { margin-top: 22px; font-size: 24px; }
-            .features-section { padding-bottom: 35px; }
+            .features-section { padding-top: 20px; padding-bottom: 30px; }
             .section-heading { display: block; margin-bottom: 14px; }
             .section-copy { margin-top: 8px; }
             .feature-grid { grid-template-columns: 1fr; gap: 9px; }
@@ -245,32 +244,7 @@
     </style>
 </head>
 <body>
-    <header class="site-header page-shell" id="top">
-        <a class="brand" href="#top" aria-label="SiBaset, kembali ke beranda">
-            <span class="brand-mark" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z"/>
-                    <path d="M3 7.5 12 12l9-4.5M12 12v9"/>
-                </svg>
-            </span>
-            <span>
-                <span class="brand-name">SiBaset</span>
-                <span class="brand-caption">Dinas Pendidikan Kota Palangka Raya</span>
-            </span>
-        </a>
 
-        <div class="header-right">
-            <nav class="header-nav" aria-label="Navigasi utama">
-                <a href="#top">Beranda</a>
-                <a href="#fitur">Fitur</a>
-                <a href="#tentang">Tentang SiBaset</a>
-            </nav>
-            <a class="button button-dark" href="#login">
-                Masuk Portal
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-            </a>
-        </div>
-    </header>
 
     <main class="page-shell">
         <section class="portal-layout" id="tentang" aria-label="Beranda dan portal login SiBaset">
@@ -293,35 +267,7 @@
                     </a>
                 </div>
 
-                <div class="map-preview" aria-label="Ilustrasi peta persebaran sekolah">
-                    <svg class="map-art" viewBox="0 0 680 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                        <path d="M-35 62 75 90 133 54 202 86 258 45 327 91 385 47 450 73 514 40 712 77" stroke="#d0d0cb" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M-25 147 70 130 127 157 180 125 238 163 296 141 352 173 416 138 474 166 548 127 705 158" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M30 -20 66 53 37 110 80 175 61 325M176 -20 210 45 185 106 233 165 218 325M333 -30 308 44 343 109 319 181 354 326M497 -25 469 49 515 102 486 185 531 325M624 -10 584 54 617 126 594 206 636 330" stroke="#fafaf9" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M-25 230 88 205 157 225 236 195 302 222 382 204 451 226 535 196 702 222" stroke="#d1d1cc" stroke-width="16" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                        <path d="M85 25 140 57 195 30 248 70 306 43 369 78 434 47 491 72 570 39" stroke="#c5c5bf" stroke-width="2" stroke-dasharray="5 8" fill="none"/>
-                        <path d="M45 284 133 250 215 278 280 253 352 278 438 248 510 270 605 239" stroke="#c5c5bf" stroke-width="2" stroke-dasharray="5 8" fill="none"/>
-                        <path d="M-10 95C95 111 133 186 213 166S348 100 405 152 526 220 690 182" stroke="#b5b5af" stroke-width="2.5" fill="none"/>
-                        <path d="M92 0C140 65 181 100 168 155S230 233 262 300" stroke="#b5b5af" stroke-width="2" fill="none"/>
-                        <path d="M421 -10C390 56 423 99 461 126S477 215 454 306" stroke="#b5b5af" stroke-width="2" fill="none"/>
-                    </svg>
-                    <div class="map-label">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.2"/></svg>
-                        ILUSTRASI PETA
-                    </div>
-                    <span class="map-pin pin-one" aria-hidden="true"></span>
-                    <span class="map-pin pin-two" aria-hidden="true"></span>
-                    <span class="map-pin pin-three" aria-hidden="true"></span>
-                    <div class="map-float-card">
-                        <span class="map-float-icon">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>
-                        </span>
-                        <span>
-                            <span class="map-float-title">Persebaran Sekolah</span>
-                            <span class="map-float-copy">Kota Palangka Raya</span>
-                        </span>
-                    </div>
-                </div>
+
             </div>
 
             <aside class="login-card" id="login" aria-labelledby="login-title">
