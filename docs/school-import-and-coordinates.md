@@ -32,7 +32,7 @@ Dokumen ini menjelaskan aktivasi struktur data sekolah, impor JSON awal, dan alu
 - Koordinat hasil impor yang masuk wilayah kota tetap berstatus menunggu verifikasi admin.
 - Operator hanya dapat mengajukan koordinat untuk sekolah yang terhubung pada akunnya.
 - Koordinat usulan tidak mengubah koordinat resmi sampai admin menyetujuinya.
-- Peta admin hanya membuat marker sekolah yang berstatus terverifikasi dan lolos pemeriksaan poligon saat halaman dimuat.
+- Peta admin menampilkan marker sementara bergaris putus untuk koordinat yang lolos poligon namun belum diverifikasi. Marker solid menandakan koordinat resmi yang terverifikasi; titik di luar wilayah atau koordinat yang tidak valid tidak diberi marker.
 - TK, SD, dan SMP memiliki marker khusus dan legenda tersendiri.
 
 ## Perintah pemeriksaan
