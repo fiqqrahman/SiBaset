@@ -25,29 +25,100 @@
                 </div>
             </div>
         </div>
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900 text-[11px] font-bold text-white" title="{{ auth()->user()->name ?? 'Operator' }}">{{ strtoupper(substr(auth()->user()->name ?? 'OP', 0, 2)) }}</div>
+        <button id="school-profile-trigger" type="button" aria-expanded="false" aria-controls="school-profile-modal" aria-label="Buka profil akun" class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-[11px] font-bold text-white transition hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2">
+            {{ strtoupper(substr(auth()->user()->name ?? 'OP', 0, 2)) }}
+        </button>
     </div>
 </header>
+
+<div id="school-profile-modal" hidden class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-zinc-950/40 p-4 backdrop-blur-[2px]">
+    <section role="dialog" aria-modal="true" aria-labelledby="school-profile-modal-title" class="my-auto w-full max-w-md overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl">
+        <div class="flex items-start justify-between border-b border-zinc-100 px-5 py-4">
+            <div>
+                <h2 id="school-profile-modal-title" class="text-sm font-bold text-zinc-900">Profil akun</h2>
+                <p class="mt-1 text-[11px] text-zinc-500">Informasi akun operator yang sedang masuk.</p>
+            </div>
+            <button id="school-profile-close" type="button" class="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900" aria-label="Tutup profil">✕</button>
+        </div>
+        <div class="p-5">
+            <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-900 text-sm font-bold text-white">{{ strtoupper(substr(auth()->user()->name ?? 'OP', 0, 2)) }}</div>
+                <div class="min-w-0">
+                    <div class="truncate text-sm font-bold text-zinc-900">{{ auth()->user()->name ?? 'Operator Sekolah' }}</div>
+                    <div class="mt-1 break-all text-xs text-zinc-500">{{ auth()->user()->email ?? 'Email belum tersedia' }}</div>
+                </div>
+            </div>
+            <dl class="mt-5 divide-y divide-zinc-100 rounded-xl border border-zinc-200 px-3">
+                <div class="flex items-start justify-between gap-4 py-3">
+                    <dt class="text-xs text-zinc-500">Peran</dt>
+                    <dd class="text-right text-xs font-semibold text-zinc-800">Operator Sekolah</dd>
+                </div>
+                <div class="flex items-start justify-between gap-4 py-3">
+                    <dt class="text-xs text-zinc-500">Status</dt>
+                    <dd class="text-right text-xs font-semibold text-zinc-800">Sesi aktif</dd>
+                </div>
+            </dl>
+            <div class="mt-5 flex justify-end gap-2">
+                <button id="school-profile-dismiss" type="button" class="rounded-xl border border-zinc-200 px-4 py-2.5 text-xs font-semibold text-zinc-700 transition hover:bg-zinc-50">Tutup</button>
+                <a href="{{ route('school.profile.edit') }}" class="rounded-xl bg-zinc-900 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-zinc-700">Profil sekolah</a>
+            </div>
+        </div>
+    </section>
+</div>
 
 @push('scripts')
 <script>
 (() => {
-    const trigger = document.getElementById('school-notification-trigger');
-    const panel = document.getElementById('school-notification-panel');
-    if (!trigger || !panel) return;
-    const closePanel = () => {
-        panel.hidden = true;
-        trigger.setAttribute('aria-expanded', 'false');
+    const notificationTrigger = document.getElementById('school-notification-trigger');
+    const notificationPanel = document.getElementById('school-notification-panel');
+    const profileTrigger = document.getElementById('school-profile-trigger');
+    const profileModal = document.getElementById('school-profile-modal');
+    const profileClose = document.getElementById('school-profile-close');
+    const profileDismiss = document.getElementById('school-profile-dismiss');
+
+    const closeNotifications = () => {
+        if (!notificationTrigger || !notificationPanel) return;
+        notificationPanel.hidden = true;
+        notificationTrigger.setAttribute('aria-expanded', 'false');
     };
-    trigger.addEventListener('click', () => {
-        panel.hidden = !panel.hidden;
-        trigger.setAttribute('aria-expanded', String(!panel.hidden));
+
+    const closeProfile = (restoreFocus = true) => {
+        if (!profileTrigger || !profileModal) return;
+        profileModal.hidden = true;
+        profileTrigger.setAttribute('aria-expanded', 'false');
+        if (restoreFocus) profileTrigger.focus();
+    };
+
+    notificationTrigger?.addEventListener('click', () => {
+        if (!notificationPanel) return;
+        notificationPanel.hidden = !notificationPanel.hidden;
+        notificationTrigger.setAttribute('aria-expanded', String(!notificationPanel.hidden));
     });
+
+    profileTrigger?.addEventListener('click', () => {
+        if (!profileModal) return;
+        const isOpening = profileModal.hidden;
+        profileModal.hidden = !isOpening;
+        profileTrigger.setAttribute('aria-expanded', String(isOpening));
+        if (isOpening) profileClose?.focus();
+    });
+
+    profileClose?.addEventListener('click', () => closeProfile());
+    profileDismiss?.addEventListener('click', () => closeProfile());
+
+    profileModal?.addEventListener('click', event => {
+        if (event.target === profileModal) closeProfile();
+    });
+
     document.addEventListener('click', event => {
-        if (!event.target.closest('#school-notification-trigger') && !event.target.closest('#school-notification-panel')) closePanel();
+        if (!event.target.closest('#school-notification-trigger') && !event.target.closest('#school-notification-panel')) closeNotifications();
     });
+
     document.addEventListener('keydown', event => {
-        if (event.key === 'Escape') closePanel();
+        if (event.key === 'Escape') {
+            closeNotifications();
+            if (profileModal && !profileModal.hidden) closeProfile();
+        }
     });
 })();
 </script>
