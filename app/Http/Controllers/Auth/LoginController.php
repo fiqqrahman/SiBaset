@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 
 class LoginController extends Controller
 {
@@ -59,10 +58,10 @@ class LoginController extends Controller
         RateLimiter::clear($key);
         $request->session()->regenerate();
 
-        return redirect()->intended(
+        return redirect()->route(
             $user->role === 'admin'
-                ? route('dashboard')
-                : route('school.dashboard')
+                ? 'admin.dashboard'
+                : 'school.dashboard'
         );
     }
 

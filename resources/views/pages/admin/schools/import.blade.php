@@ -5,11 +5,11 @@
 <div class="min-h-screen bg-zinc-50">
     <header class="flex min-h-[68px] items-center justify-between gap-4 border-b border-zinc-200 bg-white px-4 sm:px-6">
         <div class="flex items-center gap-3">
-            <a href="{{ route('dashboard') }}" class="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-50" aria-label="Kembali ke peta">←</a>
+            <a href="{{ route('admin.dashboard') }}" class="flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 text-zinc-700 hover:bg-zinc-50" aria-label="Kembali ke peta">←</a>
             <div><div class="text-xs font-extrabold">SiBaset <span class="font-medium text-zinc-400">/ Administrator</span></div><div class="mt-1 text-[10px] text-zinc-500">Data sekolah / Impor JSON</div></div>
         </div>
         <div class="flex flex-wrap justify-end gap-2">
-            <a href="{{ route('dashboard') }}" class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[11px] font-semibold text-zinc-700 hover:bg-zinc-50">Peta dashboard</a>
+            <a href="{{ route('admin.dashboard') }}" class="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[11px] font-semibold text-zinc-700 hover:bg-zinc-50">Peta dashboard</a>
             <a href="{{ route('admin.schools.coordinates.index') }}" class="rounded-xl bg-zinc-900 px-3 py-2 text-[11px] font-semibold text-white hover:bg-zinc-700">Periksa koordinat</a>
         </div>
     </header>

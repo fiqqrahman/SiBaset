@@ -143,15 +143,44 @@ test('operator role cannot open admin import pages', function () {
         ->assertForbidden();
 });
 
-test('admin login is redirected to admin dashboard and session is regenerated', function () {
+test('admin login ignores a previous operator URL and is redirected to the admin dashboard', function () {
     $admin = User::factory()->create(['role' => 'admin', 'school_id' => null, 'password' => 'Strong-password-123']);
+
+    // Reproduce a stale intended URL by visiting an operator page before logging in.
+    $this->get(route('school.dashboard'))->assertRedirect(route('home'));
 
     $this->post(route('login'), [
         'email' => $admin->email,
         'password' => 'Strong-password-123',
-    ])->assertRedirect(route('dashboard'));
+    ])->assertRedirect(route('admin.dashboard'));
 
     $this->assertAuthenticatedAs($admin);
+});
+
+test('operator login is redirected to its own dashboard even after visiting an admin URL', function () {
+    $school = createSchoolForCoordinateTest();
+    $operator = User::factory()->create([
+        'role' => 'operator_sekolah',
+        'school_id' => $school->id,
+        'password' => 'Strong-password-123',
+    ]);
+
+    $this->get(route('admin.dashboard'))->assertRedirect(route('home'));
+
+    $this->post(route('login'), [
+        'email' => $operator->email,
+        'password' => 'Strong-password-123',
+    ])->assertRedirect(route('school.dashboard'));
+
+    $this->assertAuthenticatedAs($operator);
+});
+
+test('legacy dashboard URL redirects administrators to the new URL', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+
+    $this->actingAs($admin)
+        ->get('/dashboard')
+        ->assertRedirect(route('admin.dashboard'));
 });
 
 
