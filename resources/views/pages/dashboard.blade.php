@@ -217,7 +217,7 @@
                 }
             }
 
-            $('[data-close-modal]').forEach(button => {
+            $$('[data-close-modal]').forEach(button => {
                 button.addEventListener('click', () => {
                     closeModal(button.closest('[role="dialog"]'));
                 });
