@@ -27,7 +27,7 @@
 
         *, *::before, *::after { box-sizing: border-box; }
         html { scroll-behavior: smooth; }
-        body { margin: 0; min-width: 320px; background: #f8f8f7; }
+        body { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; margin: 0; min-width: 320px; background: #f8f8f7; }
         button, input { font: inherit; }
         a { color: inherit; text-decoration: none; }
         button, a, input { -webkit-tap-highlight-color: transparent; }
@@ -38,6 +38,7 @@
         [hidden] { display: none !important; }
 
         .page-shell { width: min(1200px, calc(100% - 56px)); margin-inline: auto; }
+        main.page-shell { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; padding-block: clamp(28px, 4vh, 42px); }
         .site-header {
             min-height: 84px;
             display: flex;
@@ -68,7 +69,7 @@
 
         .portal-layout {
             display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(350px, .84fr);
-            align-items: start; gap: clamp(32px, 5vw, 72px); padding: 30px 0 24px;
+            align-items: center; gap: clamp(32px, 5vw, 72px); padding: 24px 0;
         }
         .intro { min-width: 0; padding: 12px 0 0; }
         .eyebrow {
@@ -176,19 +177,22 @@
         .role-pill svg { width: 14px; height: 14px; }
         .login-note { margin: 15px 0 0; color: #a1a1aa; font-size: 9px; line-height: 1.65; text-align: center; }
 
-        .features-section { margin-top: 28px; padding: 0; }
+        .features-section { margin-top: 26px; padding: 0; }
         .section-heading { display: block; margin-bottom: 13px; }
         .section-kicker { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
         .section-title { margin: 7px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; line-height: 1.2; }
         .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 10px; line-height: 1.65; }
-        .feature-grid { display: grid; grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr); grid-template-rows: repeat(2, minmax(92px, auto)); gap: 9px; }
-        .feature-card { display: flex; gap: 10px; min-width: 0; padding: 13px; border: 1px solid #e4e4e7; border-radius: 15px; background: rgba(255,255,255,.72); }
-        .feature-card:first-child { grid-row: span 2; flex-direction: column; align-items: flex-start; padding: 15px; }
-        .feature-card:nth-child(2), .feature-card:nth-child(3) { align-items: flex-start; padding: 12px; }
-        .feature-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46; }
-        .feature-icon svg { width: 17px; height: 17px; }
-        .feature-title { margin: 1px 0 0; font-size: 10px; font-weight: 800; line-height: 1.45; }
-        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 9px; line-height: 1.65; }
+        .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 9px; align-items: stretch; }
+        .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) {
+            display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
+            min-width: 0; min-height: 166px; height: 100%; padding: 12px;
+            border: 1px solid #e4e4e7; border-radius: 15px; background: rgba(255,255,255,.72);
+        }
+        .feature-card > span:last-child { display: block; min-width: 0; }
+        .feature-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46; }
+        .feature-icon svg { width: 16px; height: 16px; }
+        .feature-title { margin: 0; font-size: 9.5px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 8.5px; line-height: 1.65; }
 
         .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 19px 0 24px; border-top: 1px solid #e4e4e7; color: #a1a1aa; font-size: 10px; }
         .footer-brand { color: #71717a; font-weight: 700; }
@@ -201,7 +205,7 @@
             .site-header { min-height: 76px; }
             .header-nav { gap: 15px; }
             .header-right { gap: 16px; }
-            .portal-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, .88fr); gap: 25px; padding: 35px 0 42px; }
+            .portal-layout { grid-template-columns: minmax(0, 1fr) minmax(300px, .88fr); align-items: center; gap: 25px; padding: 24px 0; }
             h1 { font-size: clamp(34px, 4.7vw, 45px); }
             .login-card { padding: 23px; }
             .map-preview { min-height: 210px; }
@@ -214,7 +218,8 @@
             .brand-caption { max-width: 185px; font-size: 9px; }
             .header-nav { display: none; }
             .header-right { gap: 0; }
-            .portal-layout { grid-template-columns: minmax(0, 1fr); gap: 24px; padding: 29px 0 37px; }
+            main.page-shell { justify-content: flex-start; padding-block: 22px; }
+            .portal-layout { grid-template-columns: minmax(0, 1fr); align-items: start; gap: 24px; padding: 0; }
             .intro { padding-top: 0; }
             h1 { max-width: 580px; margin-top: 19px; font-size: clamp(35px, 9vw, 48px); }
             .hero-copy { margin-top: 15px; font-size: 12px; line-height: 1.8; }
@@ -227,11 +232,11 @@
             .section-heading { display: block; margin-bottom: 14px; }
             .section-copy { margin-top: 8px; }
             .features-section { margin-top: 25px; }
-            .feature-grid { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; gap: 9px; }
+            .feature-grid { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; gap: 9px; }
             .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) {
-                grid-row: auto; flex-direction: row; align-items: flex-start; padding: 14px;
+                grid-row: auto; grid-column: auto; flex-direction: row; align-items: flex-start;
+                min-height: 0; height: auto; padding: 14px;
             }
-            .feature-card:first-child { grid-column: auto; }
             .site-footer { align-items: flex-start; flex-direction: column; gap: 7px; padding: 17px 0 22px; }
         }
         @media (max-width: 380px) {
@@ -242,7 +247,7 @@
             .login-options { align-items: flex-start; }
             .map-float-card { right: 10px; bottom: 10px; min-width: 155px; padding: 9px; }
             .role-pills { grid-template-columns: 1fr; }
-            .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) { padding: 12px; }
+            .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) { min-height: 0; height: auto; padding: 12px; }
         }
         @media (prefers-reduced-motion: reduce) {
             html { scroll-behavior: auto; }
