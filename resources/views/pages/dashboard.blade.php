@@ -91,6 +91,7 @@
         color: white;
     }
     .sibaset-school-marker svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.65; stroke-linecap: round; stroke-linejoin: round; }
+    .school-marker-pending { border-style: dashed; opacity: .76; box-shadow: 0 0 0 2px rgba(255,255,255,.65), 0 2px 8px rgba(24,24,27,.18); }
     .school-marker-tk { background: #a16207; border-radius: 50% 50% 50% 8px; transform: rotate(-45deg); }
     .school-marker-tk svg { transform: rotate(45deg); }
     .school-marker-sd { background: #2563eb; border-radius: 11px 11px 11px 4px; }
@@ -176,8 +177,8 @@
 
             const pageSize = 8;
 
-            const verifiedSchools = schools.filter(school =>
-                school.location_status === 'verified' &&
+            const mappableSchools = schools.filter(school =>
+                ['verified', 'pending'].includes(school.location_status) &&
                 Number.isFinite(Number(school.latitude)) &&
                 Number.isFinite(Number(school.longitude)) &&
                 Number(school.latitude) >= -90 &&
@@ -185,6 +186,10 @@
                 Number(school.longitude) >= -180 &&
                 Number(school.longitude) <= 180 &&
                 !(Number(school.latitude) === 0 && Number(school.longitude) === 0)
+            );
+
+            const verifiedSchools = mappableSchools.filter(
+                school => school.location_status === 'verified'
             );
 
             schools.forEach(school => {
@@ -331,11 +336,14 @@
                     school.address || 'Alamat belum tersedia'
                 );
 
+                const isVerified = school.location_status === 'verified';
                 const status = element(
                     'span',
-                    'mt-3 inline-flex rounded-md bg-zinc-100 px-2 py-1 ' +
-                    'text-[9px] font-semibold text-zinc-700',
-                    'Koordinat terverifikasi'
+                    'mt-3 inline-flex rounded-md border px-2 py-1 text-[9px] font-semibold ' +
+                    (isVerified
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                        : 'border-amber-200 bg-amber-50 text-amber-800'),
+                    coordinateStatusLabel(school.location_status)
                 );
 
                 const actions = element('div', 'mt-3 grid grid-cols-2 gap-2');
@@ -384,7 +392,7 @@
                 const config = educationMarkerConfig[type] || educationMarkerConfig.SD;
                 return L.divIcon({
                     className: 'sibaset-school-div-icon',
-                    html: '<span class="sibaset-school-marker ' + config.className + '" title="' + config.title + '">' + config.svg + '</span>',
+                    html: '<span class="sibaset-school-marker ' + (school.location_status === 'verified' ? '' : 'school-marker-pending ') + config.className + '" title="' + config.title + ' · ' + coordinateStatusLabel(school.location_status) + '">' + config.svg + '</span>',
                     iconSize: [38, 42],
                     iconAnchor: [19, 39],
                     popupAnchor: [0, -36]
@@ -401,7 +409,7 @@
                 })[status] || 'Perlu pemeriksaan';
             }
 
-            verifiedSchools.forEach(school => {
+            mappableSchools.forEach(school => {
                 const marker = L.marker([
                     Number(school.latitude),
                     Number(school.longitude)
@@ -441,7 +449,7 @@
                     ['Kecamatan', school.district || 'Belum tersedia'],
                     ['Kelurahan', school.village || 'Belum tersedia'],
                     ['Alamat', school.address || 'Belum tersedia'],
-                    ['Status Lokasi', 'Terverifikasi']
+                    ['Status Lokasi', coordinateStatusLabel(school.location_status)]
                 ];
 
                 details.forEach(([label, value]) => {
@@ -709,8 +717,6 @@
                         )
                     );
 
-                    const verified = school.location_status === 'verified';
-
                     button.append(
                         info,
                         element(
@@ -724,7 +730,7 @@
                     button.addEventListener('click', () => {
                         selectedSchool = school;
 
-                        if (verified && markers.has(String(school.id))) {
+                        if (markers.has(String(school.id))) {
                             map.flyTo([
                                 Number(school.latitude),
                                 Number(school.longitude)
@@ -735,7 +741,7 @@
                             markers.get(String(school.id)).openPopup();
                         } else {
                             /*
-                             * Sekolah tanpa koordinat tetap dapat dicari,
+                             * Sekolah tanpa koordinat valid tetap dapat dicari,
                              * tetapi tidak diberi marker buatan.
                              */
                             showSchoolProfile(school);
@@ -815,10 +821,7 @@
 
                         selectedSchool = school;
 
-                        if (
-                            school.location_status === 'verified' &&
-                            markers.has(String(school.id))
-                        ) {
+                        if (markers.has(String(school.id))) {
                             map.flyTo([
                                 Number(school.latitude),
                                 Number(school.longitude)
@@ -849,9 +852,9 @@
             $('#zoom-out').addEventListener('click', () => map.zoomOut());
 
             $('#reset-map').addEventListener('click', () => {
-                if (verifiedSchools.length > 0) {
+                if (mappableSchools.length > 0) {
                     const bounds = L.latLngBounds(
-                        verifiedSchools.map(school => [
+                        mappableSchools.map(school => [
                             Number(school.latitude),
                             Number(school.longitude)
                         ])

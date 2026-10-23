@@ -64,6 +64,9 @@ class DashboardController extends Controller
 
             $isVisibleOnMap = $status === School::COORDINATE_VERIFIED
                 && $school->coordinate_status === School::COORDINATE_VERIFIED;
+            $canPlotOnMap = $validPair
+                && $insideBoundary
+                && in_array($status, [School::COORDINATE_VERIFIED, School::COORDINATE_PENDING], true);
 
             if ($isVisibleOnMap) {
                 $verifiedCount++;
@@ -76,8 +79,8 @@ class DashboardController extends Controller
                 'district' => $school->kecamatan,
                 'village' => $school->nama_dusun,
                 'address' => $school->alamat_jalan,
-                'latitude' => $isVisibleOnMap ? (float) $school->lintang : null,
-                'longitude' => $isVisibleOnMap ? (float) $school->bujur : null,
+                'latitude' => $canPlotOnMap ? (float) $school->lintang : null,
+                'longitude' => $canPlotOnMap ? (float) $school->bujur : null,
                 'location_status' => $status,
                 'education_level' => $school->bentuk_pendidikan,
                 'school_status' => $school->status_sekolah,
