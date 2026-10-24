@@ -1,12 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+/*
+|--------------------------------------------------------------------------
+| Web Routes Entry Point
+|--------------------------------------------------------------------------
+|
+| Route definitions are separated by responsibility. Keep this file as the
+| single entry point configured in bootstrap/app.php.
+|
+*/
 
-Route::get('/', function () {
-    return view('welcome');
-});
-
-Route::view('/dashboard', 'pages.dashboard')
-    ->name('dashboard');
-
+require __DIR__.'/auth.php';
+require __DIR__.'/admin.php';
 require __DIR__.'/school.php';

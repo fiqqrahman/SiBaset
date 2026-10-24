@@ -181,7 +181,7 @@
         .section-heading { display: block; margin-bottom: 13px; }
         .section-kicker { color: #71717a; font-size: 9px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; }
         .section-title { margin: 7px 0 0; font-size: 19px; font-weight: 800; letter-spacing: -.04em; line-height: 1.2; }
-        .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 10px; line-height: 1.65; }
+        .section-copy { max-width: 440px; margin-top: 7px; color: #71717a; font-size: 11px; line-height: 1.65; }
         .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 9px; align-items: stretch; }
         .feature-card, .feature-card:first-child, .feature-card:nth-child(2), .feature-card:nth-child(3) {
             display: flex; flex-direction: column; align-items: flex-start; gap: 9px;
@@ -191,8 +191,8 @@
         .feature-card > span:last-child { display: block; min-width: 0; }
         .feature-icon { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border: 1px solid #e4e4e7; border-radius: 10px; background: #fff; color: #3f3f46; }
         .feature-icon svg { width: 16px; height: 16px; }
-        .feature-title { margin: 0; font-size: 9.5px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
-        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 8.5px; line-height: 1.65; }
+        .feature-title { margin: 0; font-size: 10.5px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
+        .feature-copy { margin: 5px 0 0; color: #71717a; font-size: 9.5px; line-height: 1.6; }
 
         .site-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 19px 0 24px; border-top: 1px solid #e4e4e7; color: #a1a1aa; font-size: 10px; }
         .footer-brand { color: #71717a; font-weight: 700; }
@@ -336,17 +336,18 @@
                 <h2 class="login-title" id="login-title">Selamat datang kembali</h2>
                 <p class="login-copy">Masuk untuk melanjutkan ke ruang kerja SiBaset.</p>
 
-                <form class="login-form" id="login-form">
+                <form class="login-form" id="login-form" method="POST" action="{{ route('login') }}">
+                    @csrf
                     <div class="field-group">
                         <label class="field-label" for="login-email">Email terdaftar</label>
-                        <input class="field-input" type="email" id="login-email"
+                        <input class="field-input" type="email" id="login-email" name="email" value="{{ old('email') }}"
                             placeholder="nama@instansi.go.id" autocomplete="username" required>
                     </div>
 
                     <div class="field-group">
                         <label class="field-label" for="login-password">Kata sandi</label>
                         <div class="field-wrap">
-                            <input class="field-input password-input" type="password" id="login-password"
+                            <input class="field-input password-input" type="password" id="login-password" name="password"
                                 placeholder="Masukkan kata sandi" autocomplete="current-password" required>
                             <button class="password-toggle" id="toggle-password" type="button" aria-label="Tampilkan kata sandi" aria-pressed="false">
                                 <svg id="password-eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
@@ -358,7 +359,7 @@
 
                     <div class="login-options">
                         <label class="remember-label" for="remember-login">
-                            <input type="checkbox" id="remember-login">
+                            <input type="checkbox" id="remember-login" name="remember" value="1" {{ old('remember') ? 'checked' : '' }}>
                             Ingat saya
                         </label>
                         <button class="text-link" type="button" id="forgot-password">Lupa kata sandi?</button>
@@ -369,7 +370,12 @@
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
                     </button>
 
-                    <div class="login-feedback" id="login-status" role="status" aria-live="polite" hidden></div>
+                    @if ($errors->any())
+                        <div class="login-feedback" role="alert" aria-live="polite"><strong>Login belum berhasil.</strong><ul style="margin:6px 0 0;padding-left:18px">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>
+                    @endif
+                    @if (session('status'))
+                        <div class="login-feedback" role="status">{{ session('status') }}</div>
+                    @endif
                 </form>
 
                 <div class="login-divider">AKSES PORTAL</div>
@@ -383,7 +389,7 @@
                         Operator Sekolah
                     </div>
                 </div>
-                <p class="login-note">Tampilan portal login masih dalam tahap pratinjau. Autentikasi belum dihubungkan.</p>
+                <p class="login-note">Gunakan akun yang dibuat oleh administrator. Pendaftaran mandiri tidak tersedia.</p>
             </aside>
         </section>
 
@@ -399,8 +405,6 @@
         (() => {
             const password = document.getElementById('login-password');
             const toggle = document.getElementById('toggle-password');
-            const form = document.getElementById('login-form');
-            const status = document.getElementById('login-status');
             const forgot = document.getElementById('forgot-password');
 
             toggle?.addEventListener('click', () => {
@@ -413,18 +417,15 @@
                     : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
             });
 
-            const showNotice = message => {
-                status.textContent = message;
-                status.hidden = false;
-            };
-
-            form?.addEventListener('submit', event => {
-                event.preventDefault();
-                showNotice('Ini masih pratinjau tampilan. Proses login belum diaktifkan dan data tidak dikirim ke server.');
-            });
-
             forgot?.addEventListener('click', () => {
-                showNotice('Pemulihan kata sandi belum tersedia pada tahap pratinjau ini.');
+                const notice = document.createElement('div');
+                notice.className = 'login-feedback';
+                notice.setAttribute('role', 'status');
+                notice.textContent = 'Pemulihan kata sandi belum tersedia. Hubungi administrator SiBaset.';
+                const previousNotice = document.querySelector('[data-forgot-notice]');
+                previousNotice?.remove();
+                notice.dataset.forgotNotice = 'true';
+                document.getElementById('login-form')?.append(notice);
             });
         })();
     </script>

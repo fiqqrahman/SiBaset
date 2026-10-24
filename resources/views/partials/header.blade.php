@@ -2,7 +2,7 @@
     class="relative z-20 flex min-h-[68px] items-center gap-3
                border-b border-zinc-200 bg-white/95 px-4 sm:px-6">
 
-    <a href="{{ route('dashboard') }}" class="flex shrink-0 items-center gap-3" aria-label="SiBaset Dashboard">
+    <a href="{{ route('admin.dashboard') }}" class="flex shrink-0 items-center gap-3" aria-label="SiBaset Dashboard">
 
         <div class="flex h-10 w-10 items-center justify-center
                     rounded-xl bg-zinc-950 text-white">

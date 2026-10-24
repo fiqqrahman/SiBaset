@@ -4,9 +4,8 @@
 @section('page-heading', 'Dashboard')
 @section('content')
 @php
-    // Data simulasi untuk preview UI; belum diambil dari database.
-    $schoolName = 'SMP Negeri Contoh Palangka Raya';
-    $schoolNpsn = '3020XXXX';
+    $schoolName = $school?->nama ?? 'Sekolah belum terhubung';
+    $schoolNpsn = $school?->npsn ?? '—';
     $summary = [
         ['label' => 'Total aset sekolah', 'value' => '248', 'meta' => 'Seluruh kategori aset', 'icon' => 'box', 'tone' => 'zinc'],
         ['label' => 'Menunggu verifikasi', 'value' => '06', 'meta' => 'Sedang ditinjau dinas', 'icon' => 'clock', 'tone' => 'amber'],
@@ -37,13 +36,13 @@
     <section class="rounded-2xl border border-zinc-200 bg-white p-4 sm:p-5">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-6 w-6" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg></div>
-            <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h2 class="text-sm font-bold">{{ $schoolName }}</h2><span class="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700">Sekolah terdaftar</span></div><div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-500"><span>NPSN: {{ $schoolNpsn }}</span><span>Palangka Raya, Kalimantan Tengah</span></div></div>
+            <div class="min-w-0 flex-1"><div class="flex flex-wrap items-center gap-2"><h2 class="text-sm font-bold">{{ $schoolName }}</h2><span class="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-[9px] font-semibold text-emerald-700">Sekolah terdaftar</span></div><div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-zinc-500"><span>NPSN: {{ $schoolNpsn }}</span><span>{{ $school?->kecamatan ?? 'Wilayah belum tersedia' }}, {{ $school?->kabupaten ?? 'Kota Palangka Raya' }}</span></div></div>
             <a href="{{ route('school.profile.edit') }}" class="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-3 py-2.5 text-[11px] font-semibold text-zinc-700 hover:bg-zinc-50"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="m15 5 4 4M4 20l4-.8L19 8a2.1 2.1 0 0 0-3-3L5 16l-1 4Z"/></svg>Lihat profil</a>
         </div>
     </section>
 
     <section>
-        <div class="mb-3 flex items-end justify-between gap-3"><div><h2 class="text-sm font-bold tracking-tight">Ringkasan data</h2><p class="mt-1 text-[11px] text-zinc-500">Ikhtisar aset dan status pengajuan sekolah.</p></div><span class="text-[10px] text-zinc-400">Data demo</span></div>
+        <div class="mb-3 flex items-end justify-between gap-3"><div><h2 class="text-sm font-bold tracking-tight">Ringkasan data</h2><p class="mt-1 text-[11px] text-zinc-500">Ikhtisar aset dan status pengajuan sekolah.</p></div><span class="text-[10px] text-zinc-400">Ringkasan aset masih pratinjau</span></div>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             @foreach ($summary as $item)
                 @php $iconClasses = ['zinc' => 'bg-zinc-100 text-zinc-700', 'amber' => 'bg-amber-50 text-amber-700', 'emerald' => 'bg-emerald-50 text-emerald-700', 'rose' => 'bg-rose-50 text-rose-700']; @endphp
