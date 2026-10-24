@@ -125,7 +125,19 @@ return new class extends Migration
             ['code' => 'KIBAR-ASET-LAINNYA', 'name' => 'Aset Lain-lain', 'scheme' => 'KIBAR', 'created_at' => $now, 'updated_at' => $now],
         ]);
 
-        $categoryIds = DB::table('asset_categories')->pluck('id', 'code');
+        $categoryIds = DB::connection()->pretending()
+            ? collect([
+                'A' => 1,
+                'B' => 2,
+                'C' => 3,
+                'D' => 4,
+                'E' => 5,
+                'F' => 6,
+                'KIBAR-KEMITRAAN' => 7,
+                'KIBAR-ASET-TAK-BERWUJUD' => 8,
+                'KIBAR-ASET-LAINNYA' => 9,
+            ])
+            : DB::table('asset_categories')->pluck('id', 'code');
         $seedTypes = [
             ['A', 'Tanah', 'Tanah yang dicatat sebagai aset tetap.'],
             ['B', 'Komputer', 'Komputer desktop dan unit kerja.'],
