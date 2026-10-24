@@ -65,6 +65,38 @@
             </form>
         </div>
     </section>
+
+    <section id="ubah-kata-sandi" class="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+        <div class="border-b border-zinc-100 px-5 py-4 sm:px-6">
+            <h2 class="text-sm font-bold">Ubah kata sandi</h2>
+            <p class="mt-1 text-[11px] text-zinc-500">Kata sandi minimal 12 karakter. Kata sandi saat ini harus divalidasi sebelum perubahan disimpan.</p>
+            @if (auth()->user()->password_change_recommended)
+                <p class="mt-2 text-[11px] font-medium text-amber-800">Penggantian kata sandi disarankan untuk akun ini.</p>
+            @endif
+        </div>
+        <form action="{{ route('school.password.update') }}" method="POST" class="space-y-4 p-5 sm:p-6">
+            @csrf
+            @method('PUT')
+            <div class="grid gap-4 sm:grid-cols-2">
+                <label class="block sm:col-span-2">
+                    <span class="mb-2 block text-[11px] font-semibold text-zinc-700">Kata sandi saat ini</span>
+                    <input name="current_password" type="password" autocomplete="current-password" required class="h-11 w-full rounded-xl border border-zinc-200 px-3 text-xs outline-none focus:border-zinc-400">
+                    @error('current_password')<span class="mt-1 block text-[10px] text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block">
+                    <span class="mb-2 block text-[11px] font-semibold text-zinc-700">Kata sandi baru</span>
+                    <input name="password" type="password" autocomplete="new-password" minlength="12" required class="h-11 w-full rounded-xl border border-zinc-200 px-3 text-xs outline-none focus:border-zinc-400">
+                    @error('password')<span class="mt-1 block text-[10px] text-rose-700">{{ $message }}</span>@enderror
+                </label>
+                <label class="block">
+                    <span class="mb-2 block text-[11px] font-semibold text-zinc-700">Konfirmasi kata sandi baru</span>
+                    <input name="password_confirmation" type="password" autocomplete="new-password" minlength="12" required class="h-11 w-full rounded-xl border border-zinc-200 px-3 text-xs outline-none focus:border-zinc-400">
+                </label>
+            </div>
+            <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-zinc-950 px-5 py-3 text-xs font-bold text-white transition hover:bg-zinc-800">Simpan kata sandi</button>
+        </form>
+    </section>
+
 </div>
 @endsection
 

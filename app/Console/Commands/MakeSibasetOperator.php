@@ -61,6 +61,7 @@ class MakeSibasetOperator extends Command
         $user->password = Hash::make($password);
         $user->role = 'operator_sekolah';
         $user->school_id = $school->id;
+        $user->password_change_recommended = true;
         $user->save();
 
         $this->info("Akun operator siap untuk {$school->nama} (NPSN {$school->npsn}).");
