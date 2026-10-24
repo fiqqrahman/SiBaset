@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class AssetAdminController extends Controller
@@ -134,7 +135,7 @@ class AssetAdminController extends Controller
 
         if (in_array($data['decision'], [AssetAcquisition::STATUS_NEEDS_REVISION, AssetAcquisition::STATUS_REJECTED], true)
             && trim((string) ($data['review_note'] ?? '')) === '') {
-            throw \\Illuminate\\Validation\\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'review_note' => 'Catatan wajib diisi ketika perolehan perlu diperbaiki atau ditolak.',
             ]);
         }
@@ -151,7 +152,7 @@ class AssetAdminController extends Controller
                 : in_array($verifiedOwner, ['pemkot', 'belum_ditentukan'], true);
 
             if ($ownerDecisionIsInconsistent) {
-                throw \\Illuminate\\Validation\\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'verified_owner_entity' => $data['decision'] === AssetAcquisition::STATUS_VERIFIED_BMD
                         ? 'Untuk menetapkan status BMD Kota, entitas pemilik terverifikasi harus Pemerintah Kota Palangka Raya.'
                         : 'Untuk menetapkan non-BMD Kota, pilih entitas pemilik di luar Pemerintah Kota atau lengkapi bukti terlebih dahulu.',
@@ -258,7 +259,7 @@ class AssetAdminController extends Controller
 
         if (in_array($data['decision'], ['needs_revision', 'rejected'], true)
             && trim((string) ($data['review_note'] ?? '')) === '') {
-            throw \\Illuminate\\Validation\\ValidationException::withMessages([
+            throw ValidationException::withMessages([
                 'review_note' => 'Catatan wajib diisi ketika pengajuan perlu diperbaiki atau ditolak.',
             ]);
         }

@@ -253,7 +253,7 @@ class SchoolAssetController extends Controller
     public function resubmitAcquisition(Request $request, AssetAcquisition $acquisition): RedirectResponse
     {
         $school = $this->currentSchoolOrFail();
-        abort_unless($acquisition->school_id === $school->id, 404);
+        abort_unless((int) $acquisition->school_id === (int) $school->id, 404);
         abort_unless($acquisition->ownership_status === AssetAcquisition::STATUS_NEEDS_REVISION, 404);
 
         $data = $request->validate([
