@@ -112,9 +112,10 @@
              */
             const schools = {{ \Illuminate\Support\Js::from($schools ?? []) }};
             const cityBoundary = {{ \Illuminate\Support\Js::from($cityBoundary ?? null) }};
+            const assetDataEndpoint = @js(route('admin.assets.school-data', ['school' => '__SCHOOL__']));
 
             const canManageAssets =
-                {{ \Illuminate\Support\Js::from($canManageAssets ?? false) }};
+                {{ \Illuminate\Support\Js::from($canManageAssets ?? true) }};
 
             const defaultCenter = [-2.21, 113.92];
             const defaultZoom = 12;
@@ -173,6 +174,8 @@
             let selectedSchool = null;
             let activeKib = 'A';
             let currentPage = 1;
+            let kibLastPage = 0;
+            let kibRequestId = 0;
             let lastFocusedElement = null;
             let activeModal = null;
 
@@ -487,6 +490,7 @@
             function showKibModal(school) {
                 activeKib = 'A';
                 currentPage = 1;
+                kibLastPage = 0;
 
                 $('#kib-school-name').textContent = school.name;
                 $('#kib-school-status').textContent =
@@ -509,32 +513,6 @@
                 openModal($('#kib-modal'));
             }
 
-            function getFilteredAssets() {
-                if (!selectedSchool) return [];
-
-                const assets = Array.isArray(selectedSchool.assets) ?
-                    selectedSchool.assets : [];
-
-                const query = $('#kib-search').value.trim().toLowerCase();
-                const condition = $('#kib-condition').value;
-
-                return assets.filter(asset => {
-                    if (asset.category !== activeKib) return false;
-
-                    const searchable = [
-                        asset.code,
-                        asset.name,
-                        asset.location
-                    ].filter(Boolean).join(' ').toLowerCase();
-
-                    if (query && !searchable.includes(query)) return false;
-
-                    if (condition && asset.condition !== condition) return false;
-
-                    return true;
-                });
-            }
-
             function conditionLabel(condition) {
                 const labels = {
                     baik: 'Baik',
@@ -545,79 +523,113 @@
                 return labels[condition] || 'Belum diketahui';
             }
 
-            function renderKibTable() {
+
+            async function renderKibTable() {
                 const tbody = $('#kib-table-body');
                 const empty = $('#kib-empty-state');
+                const requestId = ++kibRequestId;
 
                 tbody.replaceChildren();
+                empty.classList.add('hidden');
 
-                const assets = getFilteredAssets();
-                const total = assets.length;
-
-                const totalPages = Math.ceil(total / pageSize);
-
-                if (totalPages > 0 && currentPage > totalPages) {
-                    currentPage = totalPages;
+                if (!selectedSchool) {
+                    $('#kib-result-count').textContent = '0 barang';
+                    $('#kib-pagination-info').textContent = 'Sekolah belum dipilih';
+                    $('#kib-page-number').textContent = '0 / 0';
+                    $('#kib-prev-page').disabled = true;
+                    $('#kib-next-page').disabled = true;
+                    return;
                 }
 
-                if (total === 0) {
-                    currentPage = 1;
-                }
+                const loadingRow = document.createElement('tr');
+                const loadingCell = element('td', 'px-4 py-8 text-center text-xs text-zinc-500', 'Memuat data inventaris...');
+                loadingCell.colSpan = 5;
+                loadingRow.append(loadingCell);
+                tbody.append(loadingRow);
+                $('#kib-prev-page').disabled = true;
+                $('#kib-next-page').disabled = true;
+                const params = new URLSearchParams({ category: activeKib, page: String(currentPage) });
+                const query = $('#kib-search').value.trim();
+                const condition = $('#kib-condition').value;
+                if (query) params.set('q', query);
+                if (condition) params.set('condition', condition);
 
-                const start = (currentPage - 1) * pageSize;
-                const pageAssets = assets.slice(start, start + pageSize);
-
-                pageAssets.forEach(asset => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-zinc-50';
-
-                    [
-                        asset.code || '—',
-                        asset.name || '—',
-                        asset.location || 'Belum tersedia'
-                    ].forEach(value => {
-                        const cell = element(
-                            'td',
-                            'px-4 py-3 text-[11px] text-zinc-700',
-                            value
-                        );
-
-                        row.append(cell);
+                try {
+                    const url = assetDataEndpoint.replace('__SCHOOL__', encodeURIComponent(String(selectedSchool.id))) + '?' + params.toString();
+                    const response = await fetch(url, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'same-origin'
                     });
 
-                    const conditionCell = element(
-                        'td',
-                        'px-4 py-3 text-[10px] text-zinc-600',
-                        conditionLabel(asset.condition)
-                    );
+                    if (!response.ok) {
+                        throw new Error(response.status === 403 ? 'Akses tidak diizinkan.' : 'Data aset tidak dapat dimuat.');
+                    }
 
-                    const yearCell = element(
-                        'td',
-                        'px-4 py-3 text-[11px] text-zinc-600',
-                        asset.year || '—'
-                    );
+                    const result = await response.json();
+                    if (requestId !== kibRequestId) return;
 
-                    row.append(conditionCell, yearCell);
-                    tbody.append(row);
-                });
+                    const assets = Array.isArray(result.data) ? result.data : [];
+                    const meta = result.meta || {};
+                    const total = Number(meta.total || 0);
+                    const totalPages = Number(meta.last_page || 0);
+                    kibLastPage = totalPages;
 
-                empty.classList.toggle('hidden', total > 0);
+                    if (totalPages > 0 && currentPage > totalPages) {
+                        currentPage = totalPages;
+                        renderKibTable();
+                        return;
+                    }
+                    if (total === 0) currentPage = 1;
 
-                $('#kib-result-count').textContent = `${total} barang`;
+                    tbody.replaceChildren();
+                    assets.forEach(asset => {
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-zinc-50';
+                        [
+                            asset.code || '—',
+                            asset.name || '—',
+                            asset.location || 'Belum tersedia'
+                        ].forEach(value => row.append(element('td', 'px-4 py-3 text-[11px] text-zinc-700', value)));
 
-                $('#kib-pagination-info').textContent = total ?
-                    `Menampilkan ${start + 1}–${Math.min(start + pageSize, total)} dari ${total} data` :
-                    'Menampilkan 0 data';
+                        row.append(
+                            element('td', 'px-4 py-3 text-[10px] text-zinc-600', conditionLabel(asset.condition)),
+                            element('td', 'px-4 py-3 text-[11px] text-zinc-600', asset.year || '—')
+                        );
+                        tbody.append(row);
+                    });
 
-                $('#kib-page-number').textContent =
-                    `${total ? currentPage : 0} / ${totalPages}`;
+                    empty.classList.toggle('hidden', total > 0);
+                    const emptyTitle = empty.querySelector('p.mt-3');
+                    if (emptyTitle) emptyTitle.textContent = 'Tidak ada data inventaris';
+                    const emptyCopy = empty.querySelector('p.mt-1');
+                    if (emptyCopy) emptyCopy.textContent = 'Coba ubah pencarian atau kondisi barang.';
+                    $('#kib-result-count').textContent = String(total) + ' barang';
 
-                $('#kib-prev-page').disabled = currentPage <= 1;
-                $('#kib-next-page').disabled =
-                    totalPages === 0 || currentPage >= totalPages;
+                    const start = total ? ((currentPage - 1) * Number(meta.per_page || 8)) + 1 : 0;
+                    const end = total ? Math.min(start + assets.length - 1, total) : 0;
+                    $('#kib-pagination-info').textContent = total
+                        ? 'Menampilkan ' + start + '–' + end + ' dari ' + total + ' data'
+                        : 'Menampilkan 0 data';
+                    $('#kib-page-number').textContent = String(total ? currentPage : 0) + ' / ' + totalPages;
+                    $('#kib-prev-page').disabled = currentPage <= 1;
+                    $('#kib-next-page').disabled = totalPages === 0 || currentPage >= totalPages;
+                } catch (error) {
+                    if (requestId !== kibRequestId) return;
+                    tbody.replaceChildren();
+                    empty.classList.remove('hidden');
+                    const emptyTitle = empty.querySelector('p.mt-3');
+                    if (emptyTitle) emptyTitle.textContent = 'Gagal memuat data inventaris';
+                    const emptyCopy = empty.querySelector('p.mt-1');
+                    if (emptyCopy) emptyCopy.textContent = error.message || 'Periksa koneksi dan coba lagi.';
+                    $('#kib-result-count').textContent = 'Data tidak tersedia';
+                    $('#kib-pagination-info').textContent = 'Periksa koneksi atau coba muat ulang.';
+                    $('#kib-page-number').textContent = '0 / 0';
+                    $('#kib-prev-page').disabled = true;
+                    $('#kib-next-page').disabled = true;
+                }
             }
 
-            $$('.kib-tab').forEach(tab => {
+            $('.kib-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     activeKib = tab.dataset.kibTab;
                     currentPage = 1;
@@ -651,27 +663,14 @@
             });
 
             $('#kib-next-page').addEventListener('click', () => {
-                const totalPages = Math.ceil(
-                    getFilteredAssets().length / pageSize
-                );
-
-                if (currentPage < totalPages) {
+                if (currentPage < kibLastPage) {
                     currentPage++;
                     renderKibTable();
                 }
             });
 
             $('#add-asset-button').addEventListener('click', () => {
-                /*
-                 * Tombol ini hanya titik integrasi UI.
-                 * Form dan endpoint penyimpanan harus dibuat terpisah.
-                 */
-                window.dispatchEvent(new CustomEvent('sibaset:asset-create', {
-                    detail: {
-                        schoolId: selectedSchool?.id,
-                        category: activeKib
-                    }
-                }));
+                window.location.href = '{{ route('admin.assets.index') }}';
             });
 
             function renderSchoolList(query = '') {

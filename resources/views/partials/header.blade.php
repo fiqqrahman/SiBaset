@@ -71,6 +71,13 @@
         </div>
     </div>
 
+    @if (auth()->user()?->role === 'admin')
+        <a href="{{ route('admin.assets.index') }}"
+            class="hidden min-h-9 shrink-0 items-center justify-center rounded-xl border border-zinc-200 bg-white px-3 py-2 text-[10px] font-semibold text-zinc-700 transition hover:bg-zinc-50 xl:inline-flex">
+            Manajemen aset
+        </a>
+    @endif
+
     <div class="ml-auto flex shrink-0 items-center gap-2">
 
         <div class="hidden border-l border-zinc-200 pl-3 text-right

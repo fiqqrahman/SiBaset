@@ -238,9 +238,12 @@
                        border-t border-zinc-200 bg-zinc-50/80
                        px-4 py-3 sm:px-6">
 
-            <p class="hidden text-[10px] text-zinc-500 sm:block">
-                Hak akses penambahan aset ditentukan oleh server.
-            </p>
+            <div class="hidden min-w-0 items-center gap-3 sm:flex">
+                <p class="text-[10px] text-zinc-500">Inventaris berasal dari data tersimpan. Dokumen dan keputusan pemeriksaan dikelola melalui panel administrasi.</p>
+                @if (auth()->user()?->role === 'admin')
+                    <a href="{{ route('admin.assets.index') }}" class="shrink-0 text-[10px] font-semibold text-zinc-700 underline decoration-zinc-300 underline-offset-4 hover:text-black">Kelola aset</a>
+                @endif
+            </div>
 
             <button type="button" data-close-modal
                 class="ml-auto h-9 rounded-xl border

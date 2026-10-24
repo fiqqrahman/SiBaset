@@ -6,17 +6,6 @@
 @php
     $schoolName = $school?->nama ?? 'Sekolah belum terhubung';
     $schoolNpsn = $school?->npsn ?? '—';
-    $summary = [
-        ['label' => 'Total aset sekolah', 'value' => '248', 'meta' => 'Seluruh kategori aset', 'icon' => 'box', 'tone' => 'zinc'],
-        ['label' => 'Menunggu verifikasi', 'value' => '06', 'meta' => 'Sedang ditinjau dinas', 'icon' => 'clock', 'tone' => 'amber'],
-        ['label' => 'Disetujui', 'value' => '32', 'meta' => 'Pengajuan disetujui', 'icon' => 'check', 'tone' => 'emerald'],
-        ['label' => 'Perlu perbaikan', 'value' => '02', 'meta' => 'Perlu tindak lanjut', 'icon' => 'alert', 'tone' => 'rose'],
-    ];
-    $activities = [
-        ['code' => 'AST-0248', 'title' => 'Pembaruan kondisi meja siswa', 'type' => 'Data aset', 'date' => '23 Okt 2026, 09.42', 'status' => 'Menunggu Verifikasi', 'tone' => 'amber'],
-        ['code' => 'PROFIL-003', 'title' => 'Perubahan nomor kontak sekolah', 'type' => 'Profil sekolah', 'date' => '22 Okt 2026, 14.16', 'status' => 'Perlu Perbaikan', 'tone' => 'rose'],
-        ['code' => 'AST-0219', 'title' => 'Pembaruan data komputer laboratorium', 'type' => 'Data aset', 'date' => '18 Okt 2026, 10.30', 'status' => 'Disetujui', 'tone' => 'emerald'],
-    ];
 @endphp
 
 <div class="mx-auto max-w-[1440px] space-y-6">
@@ -58,7 +47,7 @@
     </section>
 
     <section>
-        <div class="mb-3 flex items-end justify-between gap-3"><div><h2 class="text-sm font-bold tracking-tight">Ringkasan data</h2><p class="mt-1 text-[11px] text-zinc-500">Ikhtisar aset dan status pengajuan sekolah.</p></div><span class="text-[10px] text-zinc-400">Ringkasan aset masih pratinjau</span></div>
+        <div class="mb-3 flex items-end justify-between gap-3"><div><h2 class="text-sm font-bold tracking-tight">Ringkasan data</h2><p class="mt-1 text-[11px] text-zinc-500">Ikhtisar aset dan status pengajuan sekolah.</p></div><span class="text-[10px] text-zinc-400">Data inventaris saat ini</span></div>
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             @foreach ($summary as $item)
                 @php $iconClasses = ['zinc' => 'bg-zinc-100 text-zinc-700', 'amber' => 'bg-amber-50 text-amber-700', 'emerald' => 'bg-emerald-50 text-emerald-700', 'rose' => 'bg-rose-50 text-rose-700']; @endphp
@@ -86,13 +75,15 @@
             <div class="school-scrollbar overflow-x-auto"><table class="w-full min-w-[590px] text-left">
                 <thead class="bg-zinc-50/80 text-[10px] font-semibold text-zinc-500"><tr><th class="px-5 py-3">Pengajuan</th><th class="px-4 py-3">Tanggal</th><th class="px-4 py-3">Status</th></tr></thead>
                 <tbody class="divide-y divide-zinc-100">
-                @foreach ($activities as $activity)
+                @forelse ($activities as $activity)
                     @php $statusClasses = ['amber' => 'border-amber-200 bg-amber-50 text-amber-700', 'rose' => 'border-rose-200 bg-rose-50 text-rose-700', 'emerald' => 'border-emerald-200 bg-emerald-50 text-emerald-700']; @endphp
                     <tr class="transition hover:bg-zinc-50/70"><td class="px-5 py-4"><div class="text-[11px] font-semibold text-zinc-800">{{ $activity['title'] }}</div><div class="mt-1 text-[10px] text-zinc-400">{{ $activity['code'] }} · {{ $activity['type'] }}</div></td><td class="px-4 py-4 text-[10px] text-zinc-500">{{ $activity['date'] }}</td><td class="px-4 py-4"><span class="inline-flex whitespace-nowrap rounded-lg border px-2 py-1.5 text-[9px] font-semibold {{ $statusClasses[$activity['tone']] }}">{{ $activity['status'] }}</span></td></tr>
-                @endforeach
+                @empty
+                    <tr><td colspan="3" class="px-5 py-10 text-center"><div class="text-xs font-semibold text-zinc-700">Belum ada aktivitas aset</div><p class="mt-1 text-[11px] text-zinc-500">Pengajuan dan perubahan yang tersimpan akan muncul di sini.</p></td></tr>
+                @endforelse
                 </tbody>
             </table></div>
-            <div class="border-t border-zinc-100 bg-zinc-50/60 px-5 py-3 text-[10px] text-zinc-400">Contoh tampilan · data belum diambil dari database.</div>
+            <div class="border-t border-zinc-100 bg-zinc-50/60 px-5 py-3 text-[10px] text-zinc-400">Data aktivitas berasal dari catatan aset sekolah.</div>
         </div>
 
         <div class="space-y-5">
@@ -106,7 +97,7 @@
             <section class="rounded-2xl border border-amber-200 bg-amber-50/70 p-5"><div class="flex items-start gap-3"><div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-amber-700 ring-1 ring-amber-200"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-8h.01"/></svg></div><div><h2 class="text-xs font-bold text-amber-950">Perlu diketahui</h2><p class="mt-1.5 text-[11px] leading-5 text-amber-900/80">Setiap perubahan harus diperiksa sebelum dikirim. Pengajuan yang sudah tersimpan akan terkunci sampai Dinas Pendidikan memberikan keputusan.</p><a href="#pengajuan-terbaru" class="mt-3 inline-flex items-center gap-1 text-[10px] font-bold text-amber-950 hover:underline">Pantau pengajuan <span aria-hidden="true">→</span></a></div></div></section>
         </div>
     </section>
-    <p class="text-center text-[10px] text-zinc-400">Pratinjau antarmuka · Angka dan aktivitas di halaman ini merupakan data contoh.</p>
+    <p class="text-center text-[10px] text-zinc-400">Ringkasan dihitung dari data inventaris yang tersimpan.</p>
 </div>
 @endsection
 
