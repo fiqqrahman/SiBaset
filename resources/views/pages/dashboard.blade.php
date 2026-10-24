@@ -74,6 +74,7 @@
 
         @include('partials.modals.kib')
         @include('partials.modals.school-profile')
+        @include('partials.modals.school-details')
         @include('partials.modals.users')
         @include('partials.modals.policies')
         @include('partials.modals.notifications')
@@ -271,7 +272,7 @@
                 notificationsTrigger.setAttribute('aria-expanded', 'true');
             });
 
-            [$('#kib-modal'), $('#profile-modal'), $('#users-modal'), $('#policies-modal'), $('#notifications-modal')].forEach(modal => {
+            [$('#kib-modal'), $('#profile-modal'), $('#school-details-modal'), $('#users-modal'), $('#policies-modal'), $('#notifications-modal')].forEach(modal => {
                 modal.addEventListener('click', event => {
                     if (event.target === modal) {
                         closeModal(modal);
@@ -434,41 +435,48 @@
              * sekolah sebagai koordinat seluruh aset di dalamnya.
              */
             function showSchoolProfile(school) {
-                const modal = $('#profile-modal');
+                const modal = $('#school-details-modal');
+                const container = $('#school-details-content');
 
-                const oldContent = $('#school-profile-content');
+                if (!modal || !container) return;
 
-                if (oldContent) oldContent.remove();
-
-                const container = element('div', 'space-y-4 p-5');
-                container.id = 'school-profile-content';
+                container.replaceChildren();
 
                 const details = [
                     ['Nama Sekolah', school.name],
-                    ['NPSN', school.npsn || 'Belum tersedia'],
-                    ['Kecamatan', school.district || 'Belum tersedia'],
-                    ['Kelurahan', school.village || 'Belum tersedia'],
-                    ['Alamat', school.address || 'Belum tersedia'],
+                    ['NPSN', school.npsn],
+                    ['Jenjang Pendidikan', school.education_level],
+                    ['Status Sekolah', school.school_status],
+                    ['Alamat', school.address],
+                    ['Dusun', school.hamlet],
+                    ['Kecamatan', school.district],
+                    ['Kabupaten/Kota', school.regency],
+                    ['Provinsi', school.province],
+                    ['Nomor Telepon', school.phone],
+                    ['Akreditasi', school.accreditation],
                     ['Status Lokasi', coordinateStatusLabel(school.location_status)]
                 ];
 
                 details.forEach(([label, value]) => {
-                    const row = element('div', 'border-b border-zinc-100 pb-3');
+                    const row = element('div', 'border-b border-zinc-100 pb-3 last:border-b-0');
 
                     row.append(
                         element('div', 'text-[10px] font-semibold text-zinc-500', label),
-                        element('div', 'mt-1 text-xs font-medium text-zinc-800', value)
+                        element('div', 'mt-1 break-words text-xs font-medium text-zinc-800', displayValue(value))
                     );
 
                     container.append(row);
                 });
 
-                const section = modal.querySelector('section');
-                const footer = section.querySelector('footer');
-
-                section.insertBefore(container, footer);
-
                 openModal(modal);
+            }
+
+            function displayValue(value) {
+                if (value === null || value === undefined || String(value).trim() === '') {
+                    return 'Belum tersedia';
+                }
+
+                return String(value);
             }
 
             /*
@@ -677,7 +685,7 @@
                         school.name,
                         school.npsn,
                         school.district,
-                        school.village
+                        school.hamlet
                     ].filter(Boolean).join(' ').toLowerCase();
 
                     return searchable.includes(normalized);
@@ -779,7 +787,7 @@
                         school.name,
                         school.npsn,
                         school.district,
-                        school.village
+                        school.hamlet
                     ].filter(Boolean).join(' ').toLowerCase();
 
                     return searchable.includes(query);
