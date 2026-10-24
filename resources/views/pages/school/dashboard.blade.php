@@ -20,6 +20,22 @@
 @endphp
 
 <div class="mx-auto max-w-[1440px] space-y-6">
+    @if (auth()->user()->password_change_recommended && !session('school_password_reminder_dismissed'))
+        <section role="status" class="flex flex-col gap-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+            <div>
+                <h2 class="text-sm font-bold text-amber-950">Kata sandi akun perlu diperbarui</h2>
+                <p class="mt-1 text-xs leading-5 text-amber-900/80">Ganti kata sandi awal atau kata sandi yang telah diatur ulang agar akun operator tetap aman. Pengingat ini tidak menghalangi penggunaan dashboard.</p>
+            </div>
+            <div class="flex shrink-0 flex-wrap items-center gap-2">
+                <a href="{{ route('school.profile.edit') }}#ubah-kata-sandi" class="inline-flex min-h-10 items-center justify-center rounded-xl bg-zinc-950 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800">Ganti kata sandi</a>
+                <form action="{{ route('school.password.reminder.dismiss') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-amber-300 bg-white px-4 py-2 text-xs font-semibold text-amber-950 hover:bg-amber-100">Nanti saja</button>
+                </form>
+            </div>
+        </section>
+    @endif
+
     <section class="relative overflow-hidden rounded-2xl bg-zinc-950 px-5 py-6 text-white sm:px-7 sm:py-8">
         <div class="pointer-events-none absolute -right-16 -top-24 h-64 w-64 rounded-full border border-white/10"></div>
         <div class="pointer-events-none absolute -right-2 -top-10 h-44 w-44 rounded-full border border-white/10"></div>
