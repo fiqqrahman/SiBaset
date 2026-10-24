@@ -20,7 +20,7 @@ class PalangkaRayaBoundaryService
                     ->timeout(15)
                     ->retry(2, 300)
                     ->get(self::SERVICE_URL, [
-                        'where' => "namobj LIKE '%Palangka Raya%'",
+                        'where' => "namobj LIKE '%Palangkaraya%'",
                         'resultRecordCount' => 25,
                         'outFields' => '*',
                         'returnGeometry' => 'true',
@@ -47,8 +47,9 @@ class PalangkaRayaBoundaryService
                     static fn ($value) => is_scalar($value) ? (string) $value : '',
                     array_intersect_key($properties, array_flip(['namobj', 'NAMOBJ', 'nama', 'name', 'WADMKK', 'kabupaten']))
                 )));
+                $normalizedLabel = preg_replace('/[^\p{L}\p{N}]+/u', '', $label) ?? $label;
 
-                if (str_contains($label, 'palangka raya') && $this->validGeometry($feature['geometry'] ?? null)) {
+                if (str_contains($normalizedLabel, 'palangkaraya') && $this->validGeometry($feature['geometry'] ?? null)) {
                     return $feature['geometry'];
                 }
             }
