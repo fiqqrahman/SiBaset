@@ -61,6 +61,16 @@ class School extends Model
         return $this->hasMany(SchoolCoordinateChangeRequest::class);
     }
 
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
+    }
+
+    public function assetAcquisitions(): HasMany
+    {
+        return $this->hasMany(AssetAcquisition::class);
+    }
+
     public function hasUsableCoordinates(): bool
     {
         return in_array($this->coordinate_status, [

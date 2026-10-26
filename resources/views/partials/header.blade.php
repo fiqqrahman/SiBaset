@@ -71,6 +71,7 @@
         </div>
     </div>
 
+
     <div class="ml-auto flex shrink-0 items-center gap-2">
 
         <div class="hidden border-l border-zinc-200 pl-3 text-right
@@ -98,10 +99,9 @@
                 <path d="M10 21h4" />
             </svg>
 
-            <span
-                class="absolute right-2 top-2 h-2 w-2
-                         rounded-full bg-zinc-800 ring-2 ring-white">
-            </span>
+            <span id="notification-count-badge"
+                class="{{ ($notificationPendingCount ?? 0) > 0 ? '' : 'hidden' }} absolute -right-1 -top-1 min-w-5 rounded-full bg-rose-600 px-1.5 py-0.5 text-center text-[9px] font-bold leading-4 text-white ring-2 ring-white"
+                aria-label="{{ ($notificationPendingCount ?? 0) }} aktivitas perlu ditindaklanjuti">{{ ($notificationPendingCount ?? 0) > 99 ? '99+' : ($notificationPendingCount ?? 0) }}</span>
         </button>
 
         <button type="button" id="profile-trigger"

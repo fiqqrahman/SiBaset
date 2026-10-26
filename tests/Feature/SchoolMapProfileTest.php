@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Models\Asset;
+use App\Models\AssetAcquisition;
+use App\Models\AssetType;
 use App\Models\School;
 use App\Models\User;
 use App\Services\PalangkaRayaBoundaryService;
@@ -101,4 +104,44 @@ test('admin dashboard renders a separate school modal from the account profile m
         ->assertSee("['Kabupaten/Kota', school.regency]", false)
         ->assertSee("['Provinsi', school.province]", false)
         ->assertSee('function displayValue(value)', false);
+});
+
+
+test('dashboard payload includes current per-school inventory statistics', function () {
+    $school = createSchoolForMapProfileTest();
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+    $type = AssetType::query()->where('name', 'Laptop')->firstOrFail();
+    $acquisition = AssetAcquisition::query()->create([
+        'school_id' => $school->id,
+        'created_by' => $operator->id,
+        'funding_source' => 'bantuan_pemerintah',
+        'acquisition_method' => 'bantuan',
+        'owner_entity' => 'belum_ditentukan',
+        'ownership_status' => AssetAcquisition::STATUS_PENDING,
+    ]);
+    Asset::query()->create([
+        'school_id' => $school->id,
+        'asset_acquisition_id' => $acquisition->id,
+        'asset_type_id' => $type->id,
+        'submitted_by' => $operator->id,
+        'asset_code' => 'MAP-ASSET-001',
+        'name' => 'Laptop pemetaan',
+        'condition' => 'baik',
+        'status' => Asset::STATUS_PENDING,
+    ]);
+
+    $view = app(DashboardController::class)->__invoke(bindMapProfileBoundary());
+    $mappedSchool = collect($view->getData()['schools'])->firstWhere('id', $school->id);
+
+    expect($mappedSchool['asset_stats'])->toMatchArray([
+        'total' => 1,
+        'pending' => 1,
+        'approved' => 0,
+        'needs_revision' => 0,
+        'rejected' => 0,
+        'pending_acquisitions' => 1,
+        'needs_revision_acquisitions' => 0,
+        'open_acquisitions' => 1,
+        'pending_changes' => 0,
+    ]);
 });

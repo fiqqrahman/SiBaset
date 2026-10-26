@@ -5,12 +5,12 @@
     aria-labelledby="school-details-modal-title"
     aria-hidden="true">
 
-    <section class="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-white/70 bg-white shadow-2xl">
+    <section class="flex max-h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-white/70 bg-white shadow-2xl">
         <header class="flex items-start justify-between border-b border-zinc-200 p-5">
             <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Data Sekolah</span>
                 <h2 id="school-details-modal-title" class="mt-2 text-lg font-bold text-zinc-900">Profil Sekolah</h2>
-                <p class="mt-1 text-xs text-zinc-500">Informasi dari data sekolah yang terdaftar.</p>
+                <p class="mt-1 text-xs text-zinc-500">Ringkasan sekolah, statistik inventaris, dan status pengajuan.</p>
             </div>
 
             <button type="button" data-close-modal

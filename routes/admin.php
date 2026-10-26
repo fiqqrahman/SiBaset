@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AssetAdminController;
+use App\Http\Controllers\SchoolAssetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SchoolCoordinateController;
 use App\Http\Controllers\SchoolImportController;
@@ -12,6 +14,20 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::prefix('administrator')->name('admin.')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::get('/notifikasi', [DashboardController::class, 'notifications'])->name('notifications');
+
+        Route::prefix('aset')->name('assets.')->group(function () {
+            Route::get('/sekolah/{school}/data', [AssetAdminController::class, 'schoolAssets'])->name('school-data');
+            Route::get('/sekolah/{school}/perolehan', [AssetAdminController::class, 'schoolAcquisitions'])->name('school-acquisitions');
+            Route::get('/sekolah/{school}/perubahan', [AssetAdminController::class, 'schoolChanges'])->name('school-changes');
+            Route::get('/sekolah/{school}/riwayat', [AssetAdminController::class, 'schoolHistory'])->name('school-history');
+            Route::get('/jenis/data', [AssetAdminController::class, 'typeCatalogue'])->name('types.catalogue');
+            Route::post('/perolehan/{acquisition}/review', [AssetAdminController::class, 'reviewAcquisition'])->name('acquisitions.review');
+            Route::post('/perubahan/{changeRequest}/review', [AssetAdminController::class, 'reviewChangeRequest'])->name('changes.review');
+            Route::post('/jenis', [AssetAdminController::class, 'storeType'])->name('types.store');
+            Route::post('/jenis/{type}/toggle', [AssetAdminController::class, 'toggleType'])->name('types.toggle');
+            Route::get('/dokumen/{document}', [SchoolAssetController::class, 'downloadDocument'])->name('documents.download');
+        });
 
         Route::prefix('sekolah')->name('schools.')->group(function () {
             Route::get('/import', [SchoolImportController::class, 'index'])->name('import.index');

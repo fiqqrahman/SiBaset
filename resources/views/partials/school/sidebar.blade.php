@@ -10,8 +10,8 @@
     <div class="border-b border-zinc-100 p-4">
         <div class="rounded-xl border border-zinc-200 bg-white p-3">
             <div class="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.14em] text-zinc-400"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-3.5 w-3.5" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>Konteks sekolah</div>
-            <div class="mt-2 text-xs font-bold text-zinc-800">SMP Negeri Contoh</div>
-            <div class="mt-1 text-[10px] text-zinc-500">NPSN 3020XXXX · Data demo</div>
+            <div class="mt-2 break-words text-xs font-bold text-zinc-800">{{ $school?->nama ?? 'Sekolah belum terhubung' }}</div>
+            <div class="mt-1 text-[10px] text-zinc-500">NPSN {{ $school?->npsn ?? '—' }}</div>
         </div>
     </div>
 
@@ -21,7 +21,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="4" rx="1.5"/><rect x="14" y="10" width="7" height="11" rx="1.5"/><rect x="3" y="13" width="7" height="8" rx="1.5"/></svg>Dashboard
         </a>
         <a href="{{ route('school.assets.index') }}" class="{{ request()->routeIs('school.assets.*') ? 'bg-zinc-900 text-white shadow-sm' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900' }} mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-xs font-semibold transition">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg>Data Aset <span class="ml-auto rounded-md bg-zinc-100 px-1.5 py-0.5 text-[9px] text-zinc-500">Demo</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></svg>Data Aset
         </a>
         <a href="{{ route('school.profile.edit') }}" class="{{ request()->routeIs('school.profile.*') ? 'bg-zinc-900 text-white shadow-sm' : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900' }} mb-1 flex items-center gap-3 rounded-xl px-3 py-3 text-xs font-semibold transition">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6"/></svg>Profil Sekolah

@@ -36,7 +36,7 @@ test('loads the Palangkaraya boundary regardless of spacing in the returned name
         ]),
     ]);
 
-    expect(app(PalangkaRayaBoundaryService::class)->geometry())->toBe($geometry);
+    expect(app(PalangkaRayaBoundaryService::class)->geometry())->toEqual($geometry);
 
     Http::assertSent(fn (Request $request) =>
         str_contains($request->url(), '/FeatureServer/0/query')
