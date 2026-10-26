@@ -7,6 +7,7 @@ use App\Models\AssetAcquisition;
 use App\Models\AssetAcquisitionReview;
 use App\Models\AssetCategory;
 use App\Models\AssetChangeRequest;
+use App\Models\AssetDocument;
 use App\Models\AssetEvent;
 use App\Models\AssetType;
 use App\Models\School;
@@ -20,6 +21,59 @@ use Illuminate\View\View;
 
 class AssetAdminController extends Controller
 {
+
+    public function schoolAcquisitions(School $school): JsonResponse
+    {
+        $acquisitions = AssetAcquisition::query()
+            ->where('school_id', $school->id)
+            ->whereIn('ownership_status', [AssetAcquisition::STATUS_PENDING, AssetAcquisition::STATUS_NEEDS_REVISION])
+            ->with(['assets.type.category', 'documents'])
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $acquisitions->map(fn (AssetAcquisition $acquisition): array => [
+                'id' => $acquisition->id,
+                'school_id' => $acquisition->school_id,
+                'status' => $acquisition->ownership_status,
+                'funding_source' => $acquisition->funding_source,
+                'acquisition_method' => $acquisition->acquisition_method,
+                'owner_entity' => $acquisition->owner_entity,
+                'provider_name' => $acquisition->provider_name,
+                'document_reference' => $acquisition->document_reference,
+                'acquired_at' => $acquisition->acquired_at?->toDateString(),
+                'created_at' => $acquisition->created_at?->toIso8601String(),
+                'total_value' => $acquisition->total_value,
+                'notes' => $acquisition->notes,
+                'review_note' => $acquisition->review_note,
+                'review_url' => route('admin.assets.acquisitions.review', $acquisition),
+                'assets' => $acquisition->assets->map(fn (Asset $asset): array => [
+                    'id' => $asset->id,
+                    'code' => $asset->asset_code,
+                    'name' => $asset->name,
+                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB '.$asset->type->category->code,
+                    'category_name' => $asset->type->category->name,
+                    'type' => $asset->type->name,
+                    'serial_number' => $asset->serial_number,
+                    'condition' => $asset->condition,
+                    'location' => $asset->location,
+                    'year' => $asset->year_acquired,
+                    'status' => $asset->status,
+                ])->values(),
+                'documents' => $acquisition->documents->map(fn (AssetDocument $document): array => [
+                    'id' => $document->id,
+                    'kind' => $document->document_kind,
+                    'name' => $document->original_name,
+                    'download_url' => route('admin.assets.documents.download', $document),
+                ])->values(),
+            ])->values(),
+            'meta' => [
+                'total' => $acquisitions->count(),
+                'pending' => $acquisitions->where('ownership_status', AssetAcquisition::STATUS_PENDING)->count(),
+                'needs_revision' => $acquisitions->where('ownership_status', AssetAcquisition::STATUS_NEEDS_REVISION)->count(),
+            ],
+        ]);
+    }
 
     public function schoolAssets(Request $request, School $school): JsonResponse
     {
@@ -118,7 +172,7 @@ class AssetAdminController extends Controller
         ]);
     }
 
-    public function reviewAcquisition(Request $request, AssetAcquisition $acquisition): RedirectResponse
+    public function reviewAcquisition(Request $request, AssetAcquisition $acquisition): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'decision' => ['required', Rule::in([
@@ -245,6 +299,14 @@ class AssetAdminController extends Controller
                 ]);
             });
         });
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Hasil pemeriksaan perolehan berhasil dicatat.',
+                'decision' => $data['decision'],
+                'acquisition_id' => (int) $acquisition->id,
+            ]);
+        }
 
         return redirect()->route('admin.assets.index', ['tab' => 'perolehan'])
             ->with('status', 'Hasil pemeriksaan perolehan berhasil dicatat.');

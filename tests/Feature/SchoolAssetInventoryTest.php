@@ -312,3 +312,88 @@ test('operator cannot access the admin asset verification queue', function () {
 
     $this->actingAs($operator)->get(route('admin.assets.index'))->assertForbidden();
 });
+
+
+test('admin school inventory endpoint only returns open acquisitions for the selected school', function () {
+    $schoolA = createSchoolForAssetInventoryTest('91000020', 'SMP Modal A');
+    $schoolB = createSchoolForAssetInventoryTest('91000021', 'SMP Modal B');
+    $operatorA = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolA->id]);
+    $operatorB = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolB->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisitionA = createAssetAcquisitionForInventoryTest($schoolA, $operatorA, ['document_reference' => 'BAST-MODAL-A']);
+    $acquisitionB = createAssetAcquisitionForInventoryTest($schoolB, $operatorB, ['document_reference' => 'BAST-MODAL-B']);
+    createAssetForInventoryTest($schoolA, $operatorA, $acquisitionA, ['asset_code' => 'MODAL-A-001']);
+    createAssetForInventoryTest($schoolB, $operatorB, $acquisitionB, ['asset_code' => 'MODAL-B-001']);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.assets.school-acquisitions', $schoolA))
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.school_id', $schoolA->id)
+        ->assertJsonPath('data.0.document_reference', 'BAST-MODAL-A')
+        ->assertJsonPath('data.0.assets.0.code', 'MODAL-A-001')
+        ->assertJsonMissing(['code' => 'MODAL-B-001']);
+});
+
+test('admin can review an acquisition from the school modal using a JSON response', function () {
+    $school = createSchoolForAssetInventoryTest('91000022', 'SMP Modal Review');
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisition = createAssetAcquisitionForInventoryTest($school, $operator);
+    $asset = createAssetForInventoryTest($school, $operator, $acquisition, ['asset_code' => 'MODAL-REVIEW-001']);
+
+    $this->actingAs($admin)
+        ->postJson(route('admin.assets.acquisitions.review', $acquisition), [
+            'decision' => AssetAcquisition::STATUS_VERIFIED_BMD,
+            'verified_owner_entity' => 'pemkot',
+            'review_note' => 'Dokumen diperiksa melalui modal sekolah.',
+        ])
+        ->assertOk()
+        ->assertJsonPath('decision', AssetAcquisition::STATUS_VERIFIED_BMD)
+        ->assertJsonPath('acquisition_id', $acquisition->id);
+
+    expect($acquisition->refresh()->ownership_status)->toBe(AssetAcquisition::STATUS_VERIFIED_BMD)
+        ->and($asset->refresh()->status)->toBe(Asset::STATUS_APPROVED);
+});
+
+test('operator cannot access the admin notification feed', function () {
+    $school = createSchoolForAssetInventoryTest('91000024', 'SMP Notifikasi Terbatas');
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+
+    $this->actingAs($operator)
+        ->getJson(route('admin.notifications'))
+        ->assertForbidden();
+});
+
+test('admin notification feed includes asset events and current school context', function () {
+    $school = createSchoolForAssetInventoryTest('91000023', 'SMP Notifikasi');
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisition = createAssetAcquisitionForInventoryTest($school, $operator, ['document_reference' => 'BAST-NOTIF-001']);
+    $asset = createAssetForInventoryTest($school, $operator, $acquisition, ['asset_code' => 'NOTIF-001']);
+    AssetEvent::query()->create([
+        'asset_id' => $asset->id,
+        'asset_acquisition_id' => $acquisition->id,
+        'actor_id' => $operator->id,
+        'event_type' => 'acquisition_submitted',
+        'details' => ['asset_count' => 1],
+        'created_at' => now(),
+    ]);
+    AssetEvent::query()->create([
+        'asset_id' => $asset->id,
+        'asset_acquisition_id' => $acquisition->id,
+        'actor_id' => $admin->id,
+        'event_type' => 'acquisition_reviewed',
+        'details' => ['decision' => 'verified_bmd'],
+        'created_at' => now(),
+    ]);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.notifications'))
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.school_name', 'SMP Notifikasi')
+        ->assertJsonPath('data.0.actor_name', $operator->name)
+        ->assertJsonPath('data.0.target', 'asset')
+        ->assertJsonPath('meta.pending_count', 1);
+});

@@ -75,6 +75,7 @@
         @include('partials.modals.kib')
         @include('partials.modals.school-profile')
         @include('partials.modals.school-details')
+        @include('partials.modals.school-acquisitions')
         @include('partials.modals.users')
         @include('partials.modals.policies')
         @include('partials.modals.notifications')
@@ -113,6 +114,9 @@
             const schools = {{ \Illuminate\Support\Js::from($schools ?? []) }};
             const cityBoundary = {{ \Illuminate\Support\Js::from($cityBoundary ?? null) }};
             const assetDataEndpoint = @js(route('admin.assets.school-data', ['school' => '__SCHOOL__']));
+            const schoolAcquisitionsEndpoint = @js(route('admin.assets.school-acquisitions', ['school' => '__SCHOOL__']));
+            const notificationsEndpoint = @js(route('admin.notifications'));
+            const assetAdminUrl = @js(route('admin.assets.index'));
 
             const canManageAssets =
                 {{ \Illuminate\Support\Js::from($canManageAssets ?? true) }};
@@ -176,6 +180,8 @@
             let currentPage = 1;
             let kibLastPage = 0;
             let kibRequestId = 0;
+            let schoolAcquisitionRequestId = 0;
+            let notificationRequestId = 0;
             let lastFocusedElement = null;
             let activeModal = null;
 
@@ -273,9 +279,11 @@
             notificationsTrigger?.addEventListener('click', () => {
                 openModal($('#notifications-modal'));
                 notificationsTrigger.setAttribute('aria-expanded', 'true');
+                loadNotifications();
             });
+            $('#notifications-refresh')?.addEventListener('click', loadNotifications);
 
-            [$('#kib-modal'), $('#profile-modal'), $('#school-details-modal'), $('#users-modal'), $('#policies-modal'), $('#notifications-modal')].forEach(modal => {
+            [$('#kib-modal'), $('#profile-modal'), $('#school-details-modal'), $('#school-acquisitions-modal'), $('#users-modal'), $('#policies-modal'), $('#notifications-modal')].forEach(modal => {
                 modal.addEventListener('click', event => {
                     if (event.target === modal) {
                         closeModal(modal);
@@ -313,78 +321,134 @@
                 }
             });
 
-            function createSchoolPopup(school) {
-                const wrapper = element('div', 'w-[240px]');
-
-                const eyebrow = element(
-                    'div',
-                    'text-[9px] font-bold uppercase tracking-wider text-zinc-500',
-                    'Informasi Sekolah'
-                );
-
-                const name = element(
-                    'h3',
-                    'mt-2 text-sm font-bold leading-5 text-zinc-900',
-                    school.name
-                );
-
-                const npsn = element(
-                    'p',
-                    'mt-1 text-[10px] text-zinc-500',
-                    'NPSN: ' + (school.npsn || 'Belum tersedia')
-                );
-
-                const address = element(
-                    'p',
-                    'mt-2 text-[10px] leading-4 text-zinc-600',
-                    school.address || 'Alamat belum tersedia'
-                );
-
-                const isVerified = school.location_status === 'verified';
-                const status = element(
-                    'span',
-                    'mt-3 inline-flex rounded-md border px-2 py-1 text-[9px] font-semibold ' +
-                    (isVerified
-                        ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
-                        : 'border-amber-200 bg-amber-50 text-amber-800'),
-                    coordinateStatusLabel(school.location_status)
-                );
-
-                const actions = element('div', 'mt-3 grid grid-cols-2 gap-2');
-
-                const profileButton = element(
-                    'button',
-                    'rounded-lg border border-zinc-200 px-2 py-2 ' +
-                    'text-[10px] font-semibold text-zinc-700 hover:bg-zinc-50',
-                    'Profil Sekolah'
-                );
-
-                profileButton.type = 'button';
-                profileButton.addEventListener('click', () => {
-                    selectedSchool = school;
-                    showSchoolProfile(school);
-                });
-
-                const kibButton = element(
-                    'button',
-                    'rounded-lg bg-zinc-950 px-2 py-2 ' +
-                    'text-[10px] font-semibold text-white hover:bg-zinc-800',
-                    'Lihat Inventaris'
-                );
-
-                kibButton.type = 'button';
-                kibButton.addEventListener('click', () => {
-                    selectedSchool = school;
-                    showKibModal(school);
-                });
-
-                actions.append(profileButton, kibButton);
-
-                wrapper.append(eyebrow, name, npsn, address, status, actions);
-
-                return wrapper;
+            function updateNotificationBadge(count) {
+                const badge = $('#notification-count-badge');
+                if (!badge) return;
+                const safeCount = Math.max(0, Number(count) || 0);
+                badge.textContent = safeCount > 99 ? '99+' : String(safeCount);
+                badge.classList.toggle('hidden', safeCount === 0);
+                badge.setAttribute('aria-label', safeCount + ' aktivitas perlu ditindaklanjuti');
+                notificationsTrigger?.setAttribute('aria-label', 'Buka notifikasi, ' + safeCount + ' aktivitas perlu ditindaklanjuti');
             }
 
+            function relativeActivityTime(value) {
+                if (!value) return 'Waktu tidak tersedia';
+                const date = new Date(value);
+                if (Number.isNaN(date.getTime())) return 'Waktu tidak tersedia';
+                return new Intl.DateTimeFormat('id-ID', {
+                    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                }).format(date);
+            }
+
+            async function loadNotifications() {
+                const list = $('#notifications-list');
+                const meta = $('#notifications-feed-meta');
+                if (!list || !meta) return;
+                const requestId = ++notificationRequestId;
+                list.setAttribute('aria-busy', 'true');
+                list.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-4 py-8 text-center text-xs text-zinc-500', 'Memuat aktivitas terbaruâ€¦'));
+                meta.textContent = 'Memuat aktivitas 14 hari terakhirâ€¦';
+
+                try {
+                    const response = await fetch(notificationsEndpoint, {
+                        headers: { Accept: 'application/json' },
+                        credentials: 'same-origin'
+                    });
+                    if (!response.ok) throw new Error(response.status === 403 ? 'Akses notifikasi tidak diizinkan.' : 'Aktivitas terbaru tidak dapat dimuat.');
+                    const result = await response.json();
+                    if (requestId !== notificationRequestId) return;
+                    const items = Array.isArray(result.data) ? result.data : [];
+                    renderNotifications(items);
+                    updateNotificationBadge(result.meta?.pending_count ?? 0);
+                    meta.textContent = items.length + ' aktivitas terbaru Â· ' + (result.meta?.period_days || 14) + ' hari terakhir';
+                } catch (error) {
+                    if (requestId !== notificationRequestId) return;
+                    list.replaceChildren();
+                    const panel = element('div', 'rounded-xl border border-rose-200 bg-rose-50 px-4 py-8 text-center');
+                    panel.append(
+                        element('p', 'text-sm font-semibold text-rose-900', 'Notifikasi tidak dapat dimuat'),
+                        element('p', 'mt-2 text-xs leading-5 text-rose-800', error.message || 'Periksa koneksi lalu coba lagi.')
+                    );
+                    list.append(panel);
+                    meta.textContent = 'Gagal memperbarui aktivitas';
+                } finally {
+                    if (requestId === notificationRequestId) list.setAttribute('aria-busy', 'false');
+                }
+            }
+
+            function renderNotifications(items) {
+                const list = $('#notifications-list');
+                if (!list) return;
+                list.replaceChildren();
+                if (!items.length) {
+                    list.append(element('div', 'rounded-xl border border-zinc-200 px-4 py-10 text-center text-xs text-zinc-500', 'Belum ada aktivitas dalam 14 hari terakhir.'));
+                    return;
+                }
+
+                items.forEach(item => {
+                    const card = element('article', 'flex gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:p-4');
+                    const icon = element('div', 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700', item.target === 'coordinate' ? 'âŒ–' : 'â–¤');
+                    icon.setAttribute('aria-hidden', 'true');
+                    const content = element('div', 'min-w-0 flex-1');
+                    const title = element('p', 'text-xs font-semibold text-zinc-900', item.title || 'Aktivitas SiBaset');
+                    const school = element('p', 'mt-1 text-[10px] font-semibold text-zinc-600', item.school_name || 'Sekolah tidak tersedia');
+                    const description = element('p', 'mt-1 break-words text-[11px] leading-5 text-zinc-500', item.description || 'Aktivitas telah dicatat.');
+                    const actorTime = element('p', 'mt-2 text-[10px] text-zinc-400', (item.actor_name || 'Pengguna') + ' Â· ' + relativeActivityTime(item.occurred_at));
+                    content.append(title, school, description, actorTime);
+                    if (item.status) content.append(element('span', 'mt-2 inline-flex rounded-md bg-zinc-100 px-2 py-1 text-[9px] font-medium text-zinc-600', String(item.status).replaceAll('_', ' ')));
+
+                    const action = element('button', 'mt-1 min-h-8 shrink-0 self-start rounded-lg border border-zinc-200 px-2.5 text-[10px] font-semibold text-zinc-700 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400', 'Lihat');
+                    action.type = 'button';
+                    action.addEventListener('click', () => {
+                        if (item.target === 'coordinate') {
+                            window.location.href = @js(route('admin.schools.coordinates.index'));
+                            return;
+                        }
+                        if (item.target === 'change') {
+                            window.location.href = assetAdminUrl + '?tab=perubahan';
+                            return;
+                        }
+                        const schoolRecord = item.school_id ? schoolById.get(String(item.school_id)) : null;
+                        if (schoolRecord) {
+                            selectedSchool = schoolRecord;
+                            openSchoolInventory(schoolRecord);
+                        } else {
+                            window.location.href = assetAdminUrl;
+                        }
+                    });
+                    card.append(icon, content, action);
+                    list.append(card);
+                });
+            }
+            function createSchoolPopup(school) {
+                const wrapper = element('div', 'w-[250px]');
+                const stats = school.asset_stats || {};
+                wrapper.append(
+                    element('div', 'text-[9px] font-bold uppercase tracking-wider text-zinc-500', 'Informasi Sekolah'),
+                    element('h3', 'mt-2 text-sm font-bold leading-5 text-zinc-900', school.name),
+                    element('p', 'mt-1 text-[10px] text-zinc-500', 'NPSN: ' + (school.npsn || 'Belum tersedia')),
+                    element('p', 'mt-2 text-[10px] leading-4 text-zinc-600', school.address || 'Alamat belum tersedia'),
+                    element('span', 'mt-3 inline-flex rounded-md border px-2 py-1 text-[9px] font-semibold ' + (school.location_status === 'verified' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-amber-200 bg-amber-50 text-amber-800'), coordinateStatusLabel(school.location_status))
+                );
+
+                const summary = element('div', 'mt-3 grid grid-cols-2 gap-2');
+                [['Total aset', Number(stats.total || 0)], ['Pengajuan aktif', Number(stats.open_acquisitions || 0)]].forEach(([label, value]) => {
+                    const tile = element('div', 'rounded-lg border border-zinc-100 bg-zinc-50 px-2 py-2');
+                    tile.append(element('div', 'text-[9px] text-zinc-500', label), element('div', 'mt-1 text-sm font-bold tabular-nums text-zinc-900', value));
+                    summary.append(tile);
+                });
+
+                const actions = element('div', 'mt-3 grid grid-cols-2 gap-2');
+                const profileButton = element('button', 'rounded-lg border border-zinc-200 px-2 py-2 text-[10px] font-semibold text-zinc-700 hover:bg-zinc-50', 'Profil & statistik');
+                profileButton.type = 'button';
+                profileButton.addEventListener('click', () => { selectedSchool = school; showSchoolProfile(school); });
+                const inventoryButton = element('button', 'rounded-lg bg-zinc-950 px-2 py-2 text-[10px] font-semibold text-white hover:bg-zinc-800', 'Inventaris / pengajuan');
+                inventoryButton.type = 'button';
+                inventoryButton.addEventListener('click', () => { selectedSchool = school; openSchoolInventory(school); });
+                actions.append(profileButton, inventoryButton);
+                wrapper.append(summary, actions);
+                return wrapper;
+            }
             const educationMarkerConfig = {
                 TK: { className: 'school-marker-tk', title: 'TK', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5-8 4.5-8-4.5Z"/><path d="M7 10.2v5.1c3.2 2.4 6.8 2.4 10 0v-5.1M20 9v6"/></svg>' },
                 SD: { className: 'school-marker-sd', title: 'SD', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5c3.1-.8 5.7 0 8 2.1v12c-2.3-2.1-4.9-2.9-8-2.1v-12Z"/><path d="M20 5.5c-3.1-.8-5.7 0-8 2.1v12c2.3-2.1 4.9-2.9 8-2.1v-12Z"/></svg>' },
@@ -440,40 +504,64 @@
             function showSchoolProfile(school) {
                 const modal = $('#school-details-modal');
                 const container = $('#school-details-content');
-
                 if (!modal || !container) return;
 
+                selectedSchool = school;
                 container.replaceChildren();
+                $('#school-details-modal-title').textContent = school.name || 'Profil Sekolah';
+                const stats = school.asset_stats || {};
 
-                const details = [
-                    ['Nama Sekolah', school.name],
-                    ['NPSN', school.npsn],
-                    ['Jenjang Pendidikan', school.education_level],
-                    ['Status Sekolah', school.school_status],
-                    ['Alamat', school.address],
-                    ['Dusun', school.hamlet],
-                    ['Kecamatan', school.district],
-                    ['Kabupaten/Kota', school.regency],
-                    ['Provinsi', school.province],
-                    ['Nomor Telepon', school.phone],
-                    ['Akreditasi', school.accreditation],
-                    ['Status Lokasi', coordinateStatusLabel(school.location_status)]
-                ];
-
-                details.forEach(([label, value]) => {
-                    const row = element('div', 'border-b border-zinc-100 pb-3 last:border-b-0');
-
-                    row.append(
-                        element('div', 'text-[10px] font-semibold text-zinc-500', label),
-                        element('div', 'mt-1 break-words text-xs font-medium text-zinc-800', displayValue(value))
+                const summary = element('section', 'space-y-3');
+                summary.append(element('h3', 'text-xs font-bold text-zinc-800', 'Ringkasan inventaris dan pemeriksaan'));
+                const statGrid = element('div', 'grid grid-cols-2 gap-3 sm:grid-cols-3');
+                [
+                    ['Total aset', Number(stats.total || 0), 'Semua unit tercatat'],
+                    ['Menunggu verifikasi', Number(stats.pending || 0), 'Unit belum disetujui'],
+                    ['Disetujui', Number(stats.approved || 0), 'Unit aktif'],
+                    ['Perlu perbaikan', Number(stats.needs_revision || 0), 'Unit dikembalikan'],
+                    ['Pengajuan aktif', Number(stats.open_acquisitions || 0), 'Perolehan perlu diperiksa'],
+                    ['Perubahan tertunda', Number(stats.pending_changes || 0), 'Menunggu keputusan admin']
+                ].forEach(([label, value, hint]) => {
+                    const card = element('article', 'rounded-xl border border-zinc-200 bg-white p-3');
+                    card.append(
+                        element('div', 'text-[10px] font-medium text-zinc-500', label),
+                        element('div', 'mt-2 text-2xl font-bold tracking-tight tabular-nums text-zinc-900', value),
+                        element('div', 'mt-1 text-[9px] leading-4 text-zinc-400', hint)
                     );
-
-                    container.append(row);
+                    statGrid.append(card);
                 });
+                summary.append(statGrid);
 
+                const actions = element('section', 'grid gap-2 sm:grid-cols-3');
+                const inventoryButton = element('button', 'min-h-10 rounded-xl bg-zinc-950 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2', 'Buka inventaris KIB');
+                inventoryButton.type = 'button';
+                inventoryButton.addEventListener('click', () => { closeModal(modal); openSchoolInventory(school); });
+
+                const acquisitionButton = element('button', 'min-h-10 rounded-xl border border-zinc-300 bg-white px-4 py-2 text-xs font-semibold text-zinc-800 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2', 'Periksa pengajuan (' + Number(stats.open_acquisitions || 0) + ')');
+                acquisitionButton.type = 'button';
+                acquisitionButton.addEventListener('click', () => { closeModal(modal); showSchoolAcquisitionsModal(school); });
+
+                const managementLink = element('a', 'inline-flex min-h-10 items-center justify-center rounded-xl border border-zinc-200 px-4 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2', 'Pengelolaan lanjutan');
+                managementLink.href = assetAdminUrl;
+                actions.append(inventoryButton, acquisitionButton, managementLink);
+
+                const detailsGrid = element('section', 'grid gap-3 sm:grid-cols-2');
+                const details = [
+                    ['Nama Sekolah', school.name], ['NPSN', school.npsn],
+                    ['Jenjang Pendidikan', school.education_level], ['Status Sekolah', school.school_status],
+                    ['Alamat', school.address], ['Dusun', school.hamlet],
+                    ['Kecamatan', school.district], ['Kabupaten/Kota', school.regency],
+                    ['Provinsi', school.province], ['Nomor Telepon', school.phone],
+                    ['Akreditasi', school.accreditation], ['Status Lokasi', coordinateStatusLabel(school.location_status)]
+                ];
+                details.forEach(([label, value]) => {
+                    const row = element('div', 'rounded-xl border border-zinc-100 bg-zinc-50/50 p-3');
+                    row.append(element('div', 'text-[10px] font-semibold text-zinc-500', label), element('div', 'mt-1 break-words text-xs font-medium text-zinc-800', displayValue(value)));
+                    detailsGrid.append(row);
+                });
+                container.append(summary, actions, detailsGrid);
                 openModal(modal);
             }
-
             function displayValue(value) {
                 if (value === null || value === undefined || String(value).trim() === '') {
                     return 'Belum tersedia';
@@ -494,7 +582,7 @@
 
                 $('#kib-school-name').textContent = school.name;
                 $('#kib-school-status').textContent =
-                    'Lokasi terverifikasi';
+                    'Lokasi: ' + coordinateStatusLabel(school.location_status);
 
                 $$('.kib-tab').forEach(tab => {
                     tab.setAttribute(
@@ -513,6 +601,185 @@
                 openModal($('#kib-modal'));
             }
 
+            function openSchoolInventory(school) {
+                selectedSchool = school;
+                if (Number(school.asset_stats?.open_acquisitions || 0) > 0) {
+                    showSchoolAcquisitionsModal(school);
+                    return;
+                }
+                showKibModal(school);
+            }
+
+            function showSchoolAcquisitionsModal(school) {
+                const modal = $('#school-acquisitions-modal');
+                const content = $('#school-acquisitions-content');
+                const feedback = $('#school-acquisitions-status');
+                if (!modal || !content) return;
+                selectedSchool = school;
+                $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' Â· memuat pengajuan';
+                if (feedback) { feedback.hidden = true; feedback.textContent = ''; }
+                content.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-5 py-10 text-center text-xs text-zinc-500', 'Memuat pengajuan sekolahâ€¦'));
+                openModal(modal);
+                loadSchoolAcquisitions(school);
+            }
+
+            async function loadSchoolAcquisitions(school) {
+                const content = $('#school-acquisitions-content');
+                const requestId = ++schoolAcquisitionRequestId;
+                const endpoint = schoolAcquisitionsEndpoint.replace('__SCHOOL__', encodeURIComponent(String(school.id)));
+                try {
+                    const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+                    if (!response.ok) throw new Error(response.status === 403 ? 'Akses tidak diizinkan.' : 'Pengajuan tidak dapat dimuat.');
+                    const result = await response.json();
+                    if (requestId !== schoolAcquisitionRequestId) return;
+                    const acquisitions = Array.isArray(result.data) ? result.data : [];
+                    const meta = result.meta || {};
+                    school.asset_stats = school.asset_stats || {};
+                    school.asset_stats.pending_acquisitions = Number(meta.pending || 0);
+                    school.asset_stats.needs_revision_acquisitions = Number(meta.needs_revision || 0);
+                    school.asset_stats.open_acquisitions = Number(meta.total || acquisitions.length);
+                    $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' Â· ' + school.asset_stats.open_acquisitions + ' pengajuan aktif';
+                    renderSchoolAcquisitions(school, acquisitions);
+                } catch (error) {
+                    if (requestId !== schoolAcquisitionRequestId) return;
+                    content.replaceChildren();
+                    const panel = element('div', 'rounded-xl border border-rose-200 bg-rose-50 px-5 py-8 text-center');
+                    panel.append(element('p', 'text-sm font-semibold text-rose-900', 'Pengajuan tidak dapat dimuat'), element('p', 'mt-2 text-xs leading-5 text-rose-800', error.message || 'Periksa koneksi lalu coba lagi.'));
+                    content.append(panel);
+                }
+            }
+
+            function renderSchoolAcquisitions(school, acquisitions) {
+                const content = $('#school-acquisitions-content');
+                content.replaceChildren();
+                if (!acquisitions.length) {
+                    const empty = element('div', 'rounded-xl border border-zinc-200 px-5 py-10 text-center');
+                    empty.append(element('p', 'text-sm font-semibold text-zinc-800', 'Tidak ada pengajuan yang menunggu pemeriksaan'), element('p', 'mt-2 text-xs leading-5 text-zinc-500', 'Semua pengadaan sekolah ini sudah diperiksa. Data unit tersimpan tersedia pada inventaris KIB.'));
+                    content.append(empty);
+                    return;
+                }
+
+                const fundingLabels = { apbd_kota: 'APBD Kota', apbd_provinsi: 'APBD Provinsi', apbn: 'APBN / Pemerintah Pusat', bos_bosp: 'BOS / BOSP', hibah: 'Hibah', bantuan_pemerintah: 'Bantuan Pemerintah', swadaya: 'Swadaya Sekolah', lainnya: 'Lainnya' };
+                const methodLabels = { pembelian: 'Pembelian', bantuan: 'Bantuan', hibah: 'Hibah', transfer: 'Transfer / penyerahan', donasi: 'Donasi', lainnya: 'Lainnya' };
+                const ownerLabels = { belum_ditentukan: 'Belum ditentukan', pemkot: 'Pemerintah Kota Palangka Raya', pemprov: 'Pemerintah Provinsi', pemerintah_pusat: 'Pemerintah Pusat', yayasan: 'Yayasan', pihak_lain: 'Pihak lain' };
+                const docLabels = { bast: 'BAST', bapp: 'BAPP', bukti_pembelian: 'Bukti pembelian', kontrak_pesanan: 'Kontrak / pesanan', dokumen_hibah: 'Dokumen hibah', dokumen_bantuan: 'Dokumen bantuan', dokumen_pendukung: 'Dokumen pendukung' };
+                const conditionLabels = { baik: 'Baik', rusak_ringan: 'Rusak ringan', rusak_berat: 'Rusak berat', tidak_diketahui: 'Belum diketahui' };
+
+                acquisitions.forEach(acquisition => {
+                    const card = element('article', 'overflow-hidden rounded-2xl border border-zinc-200 bg-white');
+                    const header = element('header', 'flex flex-col gap-3 border-b border-zinc-100 bg-zinc-50/70 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5');
+                    const headerText = element('div', 'min-w-0');
+                    const submittedAt = acquisition.created_at ? relativeActivityTime(acquisition.created_at) : 'Tanggal tidak tersedia';
+                    headerText.append(element('h3', 'text-sm font-bold text-zinc-900', 'Perolehan #' + acquisition.id + ' Â· ' + (acquisition.assets || []).length + ' unit'), element('p', 'mt-1 text-xs text-zinc-500', (acquisition.document_reference || 'Tanpa nomor referensi') + ' Â· Diajukan ' + submittedAt));
+                    if (acquisition.review_note) headerText.append(element('p', 'mt-3 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-900', 'Catatan sebelumnya: ' + acquisition.review_note));
+                    const revision = acquisition.status === 'needs_revision';
+                    header.append(headerText, element('span', 'w-fit rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold ' + (revision ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-amber-200 bg-amber-50 text-amber-800'), revision ? 'Perlu perbaikan' : 'Menunggu verifikasi'));
+
+                    const body = element('div', 'grid gap-5 p-4 sm:p-5 xl:grid-cols-2');
+                    const details = element('section', 'space-y-3');
+                    details.append(element('h4', 'text-xs font-bold text-zinc-900', 'Informasi perolehan'));
+                    const detailGrid = element('dl', 'grid gap-2 sm:grid-cols-2');
+                    [
+                        ['Sumber dana', fundingLabels[acquisition.funding_source] || acquisition.funding_source],
+                        ['Cara perolehan', methodLabels[acquisition.acquisition_method] || acquisition.acquisition_method],
+                        ['Pemilik diajukan', ownerLabels[acquisition.owner_entity] || acquisition.owner_entity],
+                        ['Pemberi / penyedia', acquisition.provider_name],
+                        ['Nomor referensi', acquisition.document_reference],
+                        ['Tanggal perolehan', acquisition.acquired_at || 'â€”'],
+                        ['Nilai total', acquisition.total_value !== null && acquisition.total_value !== undefined ? 'Rp ' + Number(acquisition.total_value).toLocaleString('id-ID') : 'â€”']
+                    ].forEach(([label, value]) => {
+                        const row = element('div', 'rounded-lg border border-zinc-100 p-3');
+                        row.append(element('dt', 'text-[10px] text-zinc-500', label), element('dd', 'mt-1 break-words text-xs font-semibold text-zinc-800', value || 'â€”'));
+                        detailGrid.append(row);
+                    });
+                    details.append(detailGrid);
+                    if (acquisition.notes) details.append(element('p', 'text-xs leading-5 text-zinc-600', acquisition.notes));
+
+                    const documentsSection = element('section', 'space-y-2');
+                    documentsSection.append(element('h4', 'text-xs font-bold text-zinc-900', 'Dokumen pendukung'));
+                    const docs = Array.isArray(acquisition.documents) ? acquisition.documents : [];
+                    if (!docs.length) documentsSection.append(element('p', 'text-xs text-rose-700', 'Belum ada dokumen tersimpan.'));
+                    docs.forEach(doc => {
+                        const link = element('a', 'flex items-start justify-between gap-3 rounded-lg border border-zinc-200 p-3 text-xs font-semibold text-zinc-800 hover:bg-zinc-50');
+                        link.href = doc.download_url;
+                        link.append(element('span', 'min-w-0 break-words', doc.name || 'Dokumen'), element('span', 'shrink-0 text-[10px] text-zinc-500', docLabels[doc.kind] || doc.kind || 'Dokumen'));
+                        documentsSection.append(link);
+                    });
+                    details.append(documentsSection);
+
+                    const assetsSection = element('section', 'space-y-3');
+                    assetsSection.append(element('h4', 'text-xs font-bold text-zinc-900', 'Unit aset pada pengajuan'));
+                    const assetList = element('div', 'space-y-2');
+                    (acquisition.assets || []).forEach(asset => {
+                        const item = element('article', 'rounded-xl border border-zinc-200 p-3');
+                        const first = element('div', 'flex flex-wrap items-start justify-between gap-2');
+                        first.append(element('div', 'text-xs font-bold text-zinc-900', asset.name || 'Tanpa nama'), element('span', 'rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-semibold text-zinc-700', asset.code || 'Tanpa kode'));
+                        item.append(first, element('p', 'mt-2 text-[10px] leading-5 text-zinc-500', (asset.category || 'Kategori') + ' Â· ' + (asset.type || 'Jenis') + ' Â· Kondisi: ' + (conditionLabels[asset.condition] || asset.condition || 'Belum diketahui') + ' Â· Lokasi: ' + (asset.location || 'Belum tersedia') + ' Â· Nomor seri: ' + (asset.serial_number || 'â€”')));
+                        assetList.append(item);
+                    });
+                    assetsSection.append(assetList);
+
+                    const form = element('form', 'mt-4 space-y-3 rounded-xl border border-zinc-200 bg-zinc-50/70 p-4');
+                    form.action = acquisition.review_url;
+                    form.method = 'POST';
+                    const csrf = element('input'); csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = document.querySelector('meta[name="csrf-token"]')?.content || ''; form.append(csrf);
+                    form.append(element('h4', 'text-xs font-bold text-zinc-900', 'Keputusan pemeriksaan'));
+
+                    const decisionLabel = element('label', 'block');
+                    decisionLabel.append(element('span', 'mb-1.5 block text-[10px] font-semibold text-zinc-700', 'Hasil pemeriksaan'));
+                    const decision = element('select', 'min-h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs');
+                    decision.name = 'decision'; decision.required = true;
+                    [['', 'Pilih keputusan'], ['verified_bmd', 'Setujui sebagai BMD Kota'], ['verified_non_bmd', 'Setujui sebagai non-BMD Kota'], ['needs_revision', 'Kembalikan untuk perbaikan'], ['rejected', 'Tolak pengajuan']].forEach(([value, label]) => { const option = element('option', '', label); option.value = value; decision.append(option); });
+                    decisionLabel.append(decision);
+
+                    const ownerLabel = element('label', 'block');
+                    ownerLabel.append(element('span', 'mb-1.5 block text-[10px] font-semibold text-zinc-700', 'Pemilik yang disahkan admin'));
+                    const owner = element('select', 'min-h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs'); owner.name = 'verified_owner_entity';
+                    [['belum_ditentukan', 'Belum ditentukan'], ['pemkot', 'Pemerintah Kota Palangka Raya'], ['pemprov', 'Pemerintah Provinsi'], ['pemerintah_pusat', 'Pemerintah Pusat'], ['yayasan', 'Yayasan'], ['pihak_lain', 'Pihak lain']].forEach(([value, label]) => { const option = element('option', '', label); option.value = value; owner.append(option); });
+                    owner.value = acquisition.owner_entity || 'belum_ditentukan'; ownerLabel.append(owner);
+
+                    const noteLabel = element('label', 'block');
+                    noteLabel.append(element('span', 'mb-1.5 block text-[10px] font-semibold text-zinc-700', 'Catatan pemeriksaan'));
+                    const note = element('textarea', 'w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-xs');
+                    note.name = 'review_note'; note.rows = 3; note.maxLength = 3000; note.placeholder = 'Wajib diisi jika pengajuan dikembalikan atau ditolak.'; noteLabel.append(note);
+                    const error = element('div', 'rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs leading-5 text-rose-900'); error.hidden = true; error.setAttribute('role', 'alert');
+                    const submit = element('button', 'min-h-10 w-full rounded-lg bg-zinc-950 px-4 py-2 text-xs font-semibold text-white hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50', 'Simpan keputusan'); submit.type = 'submit';
+
+                    decision.addEventListener('change', () => {
+                        if (decision.value === 'verified_bmd') owner.value = 'pemkot';
+                        if (decision.value === 'verified_non_bmd' && ['pemkot', 'belum_ditentukan'].includes(owner.value)) owner.value = 'pemprov';
+                        note.required = ['needs_revision', 'rejected'].includes(decision.value);
+                    });
+                    form.append(decisionLabel, ownerLabel, noteLabel, error, submit);
+                    form.addEventListener('submit', async event => {
+                        event.preventDefault(); error.hidden = true; submit.disabled = true;
+                        try {
+                            const response = await fetch(form.action, { method: 'POST', body: new FormData(form), headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }, credentials: 'same-origin' });
+                            const result = await response.json().catch(() => ({}));
+                            if (!response.ok) {
+                                const validation = Object.values(result.errors || {}).flat().join(' ');
+                                throw new Error(validation || result.message || 'Keputusan belum berhasil disimpan.');
+                            }
+                            const feedback = $('#school-acquisitions-status');
+                            if (feedback) { feedback.hidden = false; feedback.textContent = result.message || 'Keputusan pemeriksaan berhasil dicatat.'; }
+                            await loadSchoolAcquisitions(school);
+                            loadNotifications();
+                        } catch (failure) {
+                            error.textContent = failure.message || 'Keputusan belum berhasil disimpan.'; error.hidden = false;
+                        } finally { submit.disabled = false; }
+                    });
+
+                    body.append(details, assetsSection);
+                    card.append(header, body, form);
+                    content.append(card);
+                });
+            }
+
+            $('#school-acquisitions-open-kib')?.addEventListener('click', () => {
+                const school = selectedSchool;
+                closeModal($('#school-acquisitions-modal'));
+                if (school) showKibModal(school);
+            });
             function conditionLabel(condition) {
                 const labels = {
                     baik: 'Baik',
@@ -629,7 +896,7 @@
                 }
             }
 
-            $('.kib-tab').forEach(tab => {
+            $$('.kib-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     activeKib = tab.dataset.kibTab;
                     currentPage = 1;

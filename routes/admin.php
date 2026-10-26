@@ -14,10 +14,12 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
 
     Route::prefix('administrator')->name('admin.')->group(function () {
         Route::get('/', DashboardController::class)->name('dashboard');
+        Route::get('/notifikasi', [DashboardController::class, 'notifications'])->name('notifications');
 
         Route::prefix('aset')->name('assets.')->group(function () {
             Route::get('/', [AssetAdminController::class, 'index'])->name('index');
             Route::get('/sekolah/{school}/data', [AssetAdminController::class, 'schoolAssets'])->name('school-data');
+            Route::get('/sekolah/{school}/perolehan', [AssetAdminController::class, 'schoolAcquisitions'])->name('school-acquisitions');
             Route::post('/perolehan/{acquisition}/review', [AssetAdminController::class, 'reviewAcquisition'])->name('acquisitions.review');
             Route::post('/perubahan/{changeRequest}/review', [AssetAdminController::class, 'reviewChangeRequest'])->name('changes.review');
             Route::post('/jenis', [AssetAdminController::class, 'storeType'])->name('types.store');
