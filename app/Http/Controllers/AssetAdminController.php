@@ -31,7 +31,7 @@ class AssetAdminController extends Controller
             ->get();
 
         return response()->json([
-            'data' => $acquisitions->map(fn (AssetAcquisition $acquisition): array => [
+            'data' => $acquisitions->map(fn(AssetAcquisition $acquisition): array => [
                 'id' => $acquisition->id,
                 'school_id' => $acquisition->school_id,
                 'status' => $acquisition->ownership_status,
@@ -46,11 +46,11 @@ class AssetAdminController extends Controller
                 'notes' => $acquisition->notes,
                 'review_note' => $acquisition->review_note,
                 'review_url' => route('admin.assets.acquisitions.review', $acquisition),
-                'assets' => $acquisition->assets->map(fn (Asset $asset): array => [
+                'assets' => $acquisition->assets->map(fn(Asset $asset): array => [
                     'id' => $asset->id,
                     'code' => $asset->asset_code,
                     'name' => $asset->name,
-                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB '.$asset->type->category->code,
+                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB ' . $asset->type->category->code,
                     'category_name' => $asset->type->category->name,
                     'type' => $asset->type->name,
                     'serial_number' => $asset->serial_number,
@@ -59,7 +59,7 @@ class AssetAdminController extends Controller
                     'year' => $asset->year_acquired,
                     'status' => $asset->status,
                 ])->values(),
-                'documents' => $acquisition->documents->map(fn (AssetDocument $document): array => [
+                'documents' => $acquisition->documents->map(fn(AssetDocument $document): array => [
                     'id' => $document->id,
                     'kind' => $document->document_kind,
                     'name' => $document->original_name,
@@ -88,7 +88,7 @@ class AssetAdminController extends Controller
             ->with(['type.category', 'acquisition']);
 
         if (! empty($data['category'])) {
-            $query->whereHas('type.category', fn ($builder) => $builder->where('code', $data['category']));
+            $query->whereHas('type.category', fn($builder) => $builder->where('code', $data['category']));
         }
 
         if (! empty($data['condition'])) {
@@ -97,7 +97,7 @@ class AssetAdminController extends Controller
 
         if (! empty($data['q'])) {
             $term = trim($data['q']);
-            $query->where(fn ($builder) => $builder
+            $query->where(fn($builder) => $builder
                 ->where('asset_code', 'like', "%{$term}%")
                 ->orWhere('name', 'like', "%{$term}%")
                 ->orWhere('location', 'like', "%{$term}%")
@@ -107,7 +107,7 @@ class AssetAdminController extends Controller
         $assets = $query->orderBy('asset_code')->paginate(8)->withQueryString();
 
         return response()->json([
-            'data' => $assets->getCollection()->map(fn (Asset $asset): array => [
+            'data' => $assets->getCollection()->map(fn(Asset $asset): array => [
                 'id' => $asset->id,
                 'code' => $asset->asset_code,
                 'name' => $asset->name,
@@ -137,13 +137,13 @@ class AssetAdminController extends Controller
 
         $changes = AssetChangeRequest::query()
             ->where('status', 'pending')
-            ->whereHas('asset', fn ($query) => $query->where('school_id', $school->id))
+            ->whereHas('asset', fn($query) => $query->where('school_id', $school->id))
             ->with(['asset.school', 'asset.type.category', 'submittedBy'])
             ->latest()
             ->paginate(10, ['*'], 'page', (int) ($data['page'] ?? 1));
 
         return response()->json([
-            'data' => $changes->getCollection()->map(fn (AssetChangeRequest $change): array => [
+            'data' => $changes->getCollection()->map(fn(AssetChangeRequest $change): array => [
                 'id' => $change->id,
                 'asset_id' => $change->asset_id,
                 'asset_name' => $change->asset->name,
@@ -184,7 +184,7 @@ class AssetAdminController extends Controller
             ->paginate(10, ['*'], 'page', (int) ($data['page'] ?? 1));
 
         return response()->json([
-            'data' => $history->getCollection()->map(fn (AssetAcquisition $acquisition): array => [
+            'data' => $history->getCollection()->map(fn(AssetAcquisition $acquisition): array => [
                 'id' => $acquisition->id,
                 'school_id' => $acquisition->school_id,
                 'status' => $acquisition->ownership_status,
@@ -192,13 +192,13 @@ class AssetAdminController extends Controller
                 'document_reference' => $acquisition->document_reference,
                 'review_note' => $acquisition->review_note,
                 'reviewed_at' => $acquisition->reviewed_at?->toIso8601String(),
-                'assets' => $acquisition->assets->map(fn (Asset $asset): array => [
+                'assets' => $acquisition->assets->map(fn(Asset $asset): array => [
                     'code' => $asset->asset_code,
                     'name' => $asset->name,
-                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB '.$asset->type->category->code,
+                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB ' . $asset->type->category->code,
                     'type' => $asset->type->name,
                 ])->values(),
-                'documents' => $acquisition->documents->map(fn (AssetDocument $document): array => [
+                'documents' => $acquisition->documents->map(fn(AssetDocument $document): array => [
                     'name' => $document->original_name,
                     'kind' => $document->document_kind,
                     'download_url' => route('admin.assets.documents.download', $document),
@@ -206,7 +206,7 @@ class AssetAdminController extends Controller
                 'events' => $acquisition->events
                     ->sortByDesc('created_at')
                     ->take(8)
-                    ->map(fn (AssetEvent $event): array => [
+                    ->map(fn(AssetEvent $event): array => [
                         'event_type' => $event->event_type,
                         'actor_name' => $event->actor?->name ?? 'Akun tidak tersedia',
                         'created_at' => $event->created_at?->toIso8601String(),
@@ -230,7 +230,7 @@ class AssetAdminController extends Controller
                 ->withCount('types')
                 ->orderBy('code')
                 ->get()
-                ->map(fn (AssetCategory $category): array => [
+                ->map(fn(AssetCategory $category): array => [
                     'id' => $category->id,
                     'code' => $category->code,
                     'name' => $category->name,
@@ -242,7 +242,7 @@ class AssetAdminController extends Controller
                 ->orderBy('asset_category_id')
                 ->orderBy('name')
                 ->get()
-                ->map(fn (AssetType $type): array => [
+                ->map(fn(AssetType $type): array => [
                     'id' => $type->id,
                     'asset_category_id' => $type->asset_category_id,
                     'name' => $type->name,
@@ -267,13 +267,20 @@ class AssetAdminController extends Controller
                 AssetAcquisition::STATUS_REJECTED,
             ])],
             'verified_owner_entity' => ['nullable', Rule::in([
-                'belum_ditentukan', 'pemkot', 'pemprov', 'pemerintah_pusat', 'yayasan', 'pihak_lain',
+                'belum_ditentukan',
+                'pemkot',
+                'pemprov',
+                'pemerintah_pusat',
+                'yayasan',
+                'pihak_lain',
             ])],
             'review_note' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        if (in_array($data['decision'], [AssetAcquisition::STATUS_NEEDS_REVISION, AssetAcquisition::STATUS_REJECTED], true)
-            && trim((string) ($data['review_note'] ?? '')) === '') {
+        if (
+            in_array($data['decision'], [AssetAcquisition::STATUS_NEEDS_REVISION, AssetAcquisition::STATUS_REJECTED], true)
+            && trim((string) ($data['review_note'] ?? '')) === ''
+        ) {
             throw ValidationException::withMessages([
                 'review_note' => 'Catatan wajib diisi ketika perolehan perlu diperbaiki atau ditolak.',
             ]);
@@ -404,8 +411,10 @@ class AssetAdminController extends Controller
             'review_note' => ['nullable', 'string', 'max:3000'],
         ]);
 
-        if (in_array($data['decision'], ['needs_revision', 'rejected'], true)
-            && trim((string) ($data['review_note'] ?? '')) === '') {
+        if (
+            in_array($data['decision'], ['needs_revision', 'rejected'], true)
+            && trim((string) ($data['review_note'] ?? '')) === ''
+        ) {
             throw ValidationException::withMessages([
                 'review_note' => 'Catatan wajib diisi ketika pengajuan perlu diperbaiki atau ditolak.',
             ]);
@@ -436,7 +445,7 @@ class AssetAdminController extends Controller
                 'asset_id' => $locked->asset_id,
                 'asset_acquisition_id' => $locked->asset->asset_acquisition_id,
                 'actor_id' => $request->user()->id,
-                'event_type' => 'change_'.($data['decision'] === 'approved' ? 'approved' : $data['decision']),
+                'event_type' => 'change_' . ($data['decision'] === 'approved' ? 'approved' : $data['decision']),
                 'details' => [
                     'change_request_id' => $locked->id,
                     'decision' => $data['decision'],
@@ -466,7 +475,7 @@ class AssetAdminController extends Controller
         $data = $request->validate([
             'asset_category_id' => ['required', 'exists:asset_categories,id'],
             'name' => ['required', 'string', 'max:255'],
-            'classification_code' => ['nullable', 'string', 'max:100', Rule::unique('asset_types', 'classification_code')->where(fn ($query) => $query->where('asset_category_id', $request->input('asset_category_id')))],
+            'classification_code' => ['nullable', 'string', 'max:100', Rule::unique('asset_types', 'classification_code')->where(fn($query) => $query->where('asset_category_id', $request->input('asset_category_id')))],
             'description' => ['nullable', 'string', 'max:2000'],
         ]);
 
