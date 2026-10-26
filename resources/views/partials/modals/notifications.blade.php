@@ -15,13 +15,13 @@
         <div class="flex items-center justify-between gap-3 border-b border-zinc-100 bg-zinc-50/70 px-4 py-3 sm:px-6">
             <div>
                 <p class="text-xs font-semibold text-zinc-800">Aktivitas terbaru</p>
-                <p id="notifications-feed-meta" class="mt-1 text-[10px] text-zinc-500">Memuat pembaruan dari serverâ€¦</p>
+                <p id="notifications-feed-meta" class="mt-1 text-[10px] text-zinc-500">Memuat pembaruan dari server…</p>
             </div>
             <button type="button" id="notifications-refresh" class="min-h-9 rounded-lg border border-zinc-200 bg-white px-3 text-[10px] font-semibold text-zinc-700 hover:bg-zinc-100">Muat ulang</button>
         </div>
         <div class="flex-1 overflow-y-auto p-4 sm:p-6">
             <div id="notifications-list" class="space-y-3" aria-live="polite" aria-busy="true">
-                <div class="rounded-xl border border-zinc-200 px-4 py-8 text-center text-xs text-zinc-500">Memuat aktivitas terbaruâ€¦</div>
+                <div class="rounded-xl border border-zinc-200 px-4 py-8 text-center text-xs text-zinc-500">Memuat aktivitas terbaru…</div>
             </div>
             <p class="mt-4 rounded-xl bg-zinc-50 p-3 text-[10px] leading-5 text-zinc-500">Counter lonceng menunjukkan jumlah pekerjaan yang masih perlu ditindaklanjuti, bukan status sudah dibaca. Feed menampilkan aktivitas 14 hari terakhir.</p>
         </div>

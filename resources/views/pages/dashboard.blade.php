@@ -346,8 +346,8 @@
                 if (!list || !meta) return;
                 const requestId = ++notificationRequestId;
                 list.setAttribute('aria-busy', 'true');
-                list.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-4 py-8 text-center text-xs text-zinc-500', 'Memuat aktivitas terbaruâ€¦'));
-                meta.textContent = 'Memuat aktivitas 14 hari terakhirâ€¦';
+                list.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-4 py-8 text-center text-xs text-zinc-500', 'Memuat aktivitas terbaru…'));
+                meta.textContent = 'Memuat aktivitas 14 hari terakhir…';
 
                 try {
                     const response = await fetch(notificationsEndpoint, {
@@ -360,7 +360,7 @@
                     const items = Array.isArray(result.data) ? result.data : [];
                     renderNotifications(items);
                     updateNotificationBadge(result.meta?.pending_count ?? 0);
-                    meta.textContent = items.length + ' aktivitas terbaru Â· ' + (result.meta?.period_days || 14) + ' hari terakhir';
+                    meta.textContent = items.length + ' aktivitas terbaru · ' + (result.meta?.period_days || 14) + ' hari terakhir';
                 } catch (error) {
                     if (requestId !== notificationRequestId) return;
                     list.replaceChildren();
@@ -387,13 +387,13 @@
 
                 items.forEach(item => {
                     const card = element('article', 'flex gap-3 rounded-xl border border-zinc-200 bg-white p-3 sm:p-4');
-                    const icon = element('div', 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700', item.target === 'coordinate' ? 'âŒ–' : 'â–¤');
+                    const icon = element('div', 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700', item.target === 'coordinate' ? '⌖' : '▤');
                     icon.setAttribute('aria-hidden', 'true');
                     const content = element('div', 'min-w-0 flex-1');
                     const title = element('p', 'text-xs font-semibold text-zinc-900', item.title || 'Aktivitas SiBaset');
                     const school = element('p', 'mt-1 text-[10px] font-semibold text-zinc-600', item.school_name || 'Sekolah tidak tersedia');
                     const description = element('p', 'mt-1 break-words text-[11px] leading-5 text-zinc-500', item.description || 'Aktivitas telah dicatat.');
-                    const actorTime = element('p', 'mt-2 text-[10px] text-zinc-400', (item.actor_name || 'Pengguna') + ' Â· ' + relativeActivityTime(item.occurred_at));
+                    const actorTime = element('p', 'mt-2 text-[10px] text-zinc-400', (item.actor_name || 'Pengguna') + ' · ' + relativeActivityTime(item.occurred_at));
                     content.append(title, school, description, actorTime);
                     if (item.status) content.append(element('span', 'mt-2 inline-flex rounded-md bg-zinc-100 px-2 py-1 text-[9px] font-medium text-zinc-600', String(item.status).replaceAll('_', ' ')));
 
@@ -616,9 +616,9 @@
                 const feedback = $('#school-acquisitions-status');
                 if (!modal || !content) return;
                 selectedSchool = school;
-                $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' Â· memuat pengajuan';
+                $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' · memuat pengajuan';
                 if (feedback) { feedback.hidden = true; feedback.textContent = ''; }
-                content.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-5 py-10 text-center text-xs text-zinc-500', 'Memuat pengajuan sekolahâ€¦'));
+                content.replaceChildren(element('div', 'rounded-xl border border-zinc-200 px-5 py-10 text-center text-xs text-zinc-500', 'Memuat pengajuan sekolah…'));
                 openModal(modal);
                 loadSchoolAcquisitions(school);
             }
@@ -638,7 +638,7 @@
                     school.asset_stats.pending_acquisitions = Number(meta.pending || 0);
                     school.asset_stats.needs_revision_acquisitions = Number(meta.needs_revision || 0);
                     school.asset_stats.open_acquisitions = Number(meta.total || acquisitions.length);
-                    $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' Â· ' + school.asset_stats.open_acquisitions + ' pengajuan aktif';
+                    $('#school-acquisitions-school-name').textContent = (school.name || 'Sekolah terpilih') + ' · ' + school.asset_stats.open_acquisitions + ' pengajuan aktif';
                     renderSchoolAcquisitions(school, acquisitions);
                 } catch (error) {
                     if (requestId !== schoolAcquisitionRequestId) return;
@@ -670,7 +670,7 @@
                     const header = element('header', 'flex flex-col gap-3 border-b border-zinc-100 bg-zinc-50/70 p-4 sm:flex-row sm:items-start sm:justify-between sm:p-5');
                     const headerText = element('div', 'min-w-0');
                     const submittedAt = acquisition.created_at ? relativeActivityTime(acquisition.created_at) : 'Tanggal tidak tersedia';
-                    headerText.append(element('h3', 'text-sm font-bold text-zinc-900', 'Perolehan #' + acquisition.id + ' Â· ' + (acquisition.assets || []).length + ' unit'), element('p', 'mt-1 text-xs text-zinc-500', (acquisition.document_reference || 'Tanpa nomor referensi') + ' Â· Diajukan ' + submittedAt));
+                    headerText.append(element('h3', 'text-sm font-bold text-zinc-900', 'Perolehan #' + acquisition.id + ' · ' + (acquisition.assets || []).length + ' unit'), element('p', 'mt-1 text-xs text-zinc-500', (acquisition.document_reference || 'Tanpa nomor referensi') + ' · Diajukan ' + submittedAt));
                     if (acquisition.review_note) headerText.append(element('p', 'mt-3 rounded-lg bg-rose-50 p-3 text-xs leading-5 text-rose-900', 'Catatan sebelumnya: ' + acquisition.review_note));
                     const revision = acquisition.status === 'needs_revision';
                     header.append(headerText, element('span', 'w-fit rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold ' + (revision ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-amber-200 bg-amber-50 text-amber-800'), revision ? 'Perlu perbaikan' : 'Menunggu verifikasi'));
@@ -685,11 +685,11 @@
                         ['Pemilik diajukan', ownerLabels[acquisition.owner_entity] || acquisition.owner_entity],
                         ['Pemberi / penyedia', acquisition.provider_name],
                         ['Nomor referensi', acquisition.document_reference],
-                        ['Tanggal perolehan', acquisition.acquired_at || 'â€”'],
-                        ['Nilai total', acquisition.total_value !== null && acquisition.total_value !== undefined ? 'Rp ' + Number(acquisition.total_value).toLocaleString('id-ID') : 'â€”']
+                        ['Tanggal perolehan', acquisition.acquired_at || '—'],
+                        ['Nilai total', acquisition.total_value !== null && acquisition.total_value !== undefined ? 'Rp ' + Number(acquisition.total_value).toLocaleString('id-ID') : '—']
                     ].forEach(([label, value]) => {
                         const row = element('div', 'rounded-lg border border-zinc-100 p-3');
-                        row.append(element('dt', 'text-[10px] text-zinc-500', label), element('dd', 'mt-1 break-words text-xs font-semibold text-zinc-800', value || 'â€”'));
+                        row.append(element('dt', 'text-[10px] text-zinc-500', label), element('dd', 'mt-1 break-words text-xs font-semibold text-zinc-800', value || '—'));
                         detailGrid.append(row);
                     });
                     details.append(detailGrid);
@@ -714,7 +714,7 @@
                         const item = element('article', 'rounded-xl border border-zinc-200 p-3');
                         const first = element('div', 'flex flex-wrap items-start justify-between gap-2');
                         first.append(element('div', 'text-xs font-bold text-zinc-900', asset.name || 'Tanpa nama'), element('span', 'rounded-md bg-zinc-100 px-2 py-1 text-[10px] font-semibold text-zinc-700', asset.code || 'Tanpa kode'));
-                        item.append(first, element('p', 'mt-2 text-[10px] leading-5 text-zinc-500', (asset.category || 'Kategori') + ' Â· ' + (asset.type || 'Jenis') + ' Â· Kondisi: ' + (conditionLabels[asset.condition] || asset.condition || 'Belum diketahui') + ' Â· Lokasi: ' + (asset.location || 'Belum tersedia') + ' Â· Nomor seri: ' + (asset.serial_number || 'â€”')));
+                        item.append(first, element('p', 'mt-2 text-[10px] leading-5 text-zinc-500', (asset.category || 'Kategori') + ' · ' + (asset.type || 'Jenis') + ' · Kondisi: ' + (conditionLabels[asset.condition] || asset.condition || 'Belum diketahui') + ' · Lokasi: ' + (asset.location || 'Belum tersedia') + ' · Nomor seri: ' + (asset.serial_number || '—')));
                         assetList.append(item);
                     });
                     assetsSection.append(assetList);
