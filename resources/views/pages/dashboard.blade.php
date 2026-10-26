@@ -417,7 +417,10 @@
                             return;
                         }
                         closeModal($('#notifications-modal'));
-                        showKibModal(schoolRecord, 'management', item.target === 'change' ? 'perubahan' : 'perolehan');
+                        const targetTab = item.target === 'change'
+                            ? (item.event_type === 'change_requested' ? 'perubahan' : 'riwayat')
+                            : (['acquisition_reviewed', 'asset_reviewed'].includes(item.event_type) ? 'riwayat' : 'perolehan');
+                        showKibModal(schoolRecord, 'management', targetTab);
                     });
                     card.append(icon, content, action);
                     list.append(card);
