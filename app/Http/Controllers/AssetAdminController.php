@@ -17,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
-use Illuminate\View\View;
 
 class AssetAdminController extends Controller
 {
@@ -130,45 +129,131 @@ class AssetAdminController extends Controller
         ]);
     }
 
-    public function index(Request $request): View
+    public function schoolChanges(Request $request, School $school): JsonResponse
     {
-        $tab = in_array($request->query('tab'), ['perolehan', 'perubahan', 'jenis', 'riwayat'], true)
-            ? $request->query('tab') : 'perolehan';
+        $data = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
 
-        return view('pages.admin.assets.index', [
-            'tab' => $tab,
-            'acquisitions' => AssetAcquisition::query()
-                ->with(['school', 'createdBy', 'assets.type.category', 'documents'])
-                ->whereIn('ownership_status', [
-                    AssetAcquisition::STATUS_PENDING,
-                    AssetAcquisition::STATUS_NEEDS_REVISION,
-                ])
-                ->latest()
-                ->paginate(15, ['*'], 'perolehan_page')
-                ->withQueryString(),
-            'changeRequests' => AssetChangeRequest::query()
-                ->with(['asset.school', 'asset.type.category', 'submittedBy'])
-                ->where('status', 'pending')
-                ->latest()
-                ->paginate(15, ['*'], 'perubahan_page')
-                ->withQueryString(),
-            'history' => AssetAcquisition::query()
-                ->with(['school', 'createdBy', 'assets.type.category', 'documents', 'events.actor'])
-                ->whereIn('ownership_status', [
-                    AssetAcquisition::STATUS_VERIFIED_BMD,
-                    AssetAcquisition::STATUS_VERIFIED_NON_BMD,
-                    AssetAcquisition::STATUS_REJECTED,
-                ])
-                ->latest('reviewed_at')
-                ->paginate(15, ['*'], 'riwayat_page')
-                ->withQueryString(),
-            'categories' => AssetCategory::query()->withCount('types')->orderBy('code')->get(),
-            'types' => AssetType::query()->with('category')->orderBy('asset_category_id')->orderBy('name')->paginate(30, ['*'], 'jenis_page')->withQueryString(),
-            'summary' => [
-                'pending_acquisitions' => AssetAcquisition::query()->where('ownership_status', AssetAcquisition::STATUS_PENDING)->count(),
-                'pending_changes' => AssetChangeRequest::query()->where('status', 'pending')->count(),
-                'approved_assets' => Asset::query()->where('status', Asset::STATUS_APPROVED)->count(),
+        $changes = AssetChangeRequest::query()
+            ->where('status', 'pending')
+            ->whereHas('asset', fn ($query) => $query->where('school_id', $school->id))
+            ->with(['asset.school', 'asset.type.category', 'submittedBy'])
+            ->latest()
+            ->paginate(10, ['*'], 'page', (int) ($data['page'] ?? 1));
+
+        return response()->json([
+            'data' => $changes->getCollection()->map(fn (AssetChangeRequest $change): array => [
+                'id' => $change->id,
+                'asset_id' => $change->asset_id,
+                'asset_name' => $change->asset->name,
+                'asset_code' => $change->asset->asset_code,
+                'school_id' => $school->id,
+                'school_name' => $school->nama,
+                'npsn' => $school->npsn,
+                'request_note' => $change->request_note,
+                'proposed_changes' => $change->proposed_changes ?? [],
+                'submitted_by' => $change->submittedBy?->name,
+                'created_at' => $change->created_at?->toIso8601String(),
+                'review_url' => route('admin.assets.changes.review', $change),
+            ])->values(),
+            'meta' => [
+                'total' => $changes->total(),
+                'current_page' => $changes->currentPage(),
+                'last_page' => $changes->lastPage(),
+                'per_page' => $changes->perPage(),
             ],
+        ]);
+    }
+
+    public function schoolHistory(Request $request, School $school): JsonResponse
+    {
+        $data = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
+
+        $history = AssetAcquisition::query()
+            ->where('school_id', $school->id)
+            ->whereIn('ownership_status', [
+                AssetAcquisition::STATUS_VERIFIED_BMD,
+                AssetAcquisition::STATUS_VERIFIED_NON_BMD,
+                AssetAcquisition::STATUS_REJECTED,
+            ])
+            ->with(['assets.type.category', 'documents', 'events.actor'])
+            ->latest('reviewed_at')
+            ->paginate(10, ['*'], 'page', (int) ($data['page'] ?? 1));
+
+        return response()->json([
+            'data' => $history->getCollection()->map(fn (AssetAcquisition $acquisition): array => [
+                'id' => $acquisition->id,
+                'school_id' => $acquisition->school_id,
+                'status' => $acquisition->ownership_status,
+                'owner_entity' => $acquisition->owner_entity,
+                'document_reference' => $acquisition->document_reference,
+                'review_note' => $acquisition->review_note,
+                'reviewed_at' => $acquisition->reviewed_at?->toIso8601String(),
+                'assets' => $acquisition->assets->map(fn (Asset $asset): array => [
+                    'code' => $asset->asset_code,
+                    'name' => $asset->name,
+                    'category' => $asset->type->category->scheme === 'KIBAR' ? 'KIBAR' : 'KIB '.$asset->type->category->code,
+                    'type' => $asset->type->name,
+                ])->values(),
+                'documents' => $acquisition->documents->map(fn (AssetDocument $document): array => [
+                    'name' => $document->original_name,
+                    'kind' => $document->document_kind,
+                    'download_url' => route('admin.assets.documents.download', $document),
+                ])->values(),
+                'events' => $acquisition->events
+                    ->sortByDesc('created_at')
+                    ->take(8)
+                    ->map(fn (AssetEvent $event): array => [
+                        'event_type' => $event->event_type,
+                        'actor_name' => $event->actor?->name ?? 'Akun tidak tersedia',
+                        'created_at' => $event->created_at?->toIso8601String(),
+                        'decision' => data_get($event->details, 'decision'),
+                        'review_note' => data_get($event->details, 'review_note'),
+                    ])->values(),
+            ]),
+            'meta' => [
+                'total' => $history->total(),
+                'current_page' => $history->currentPage(),
+                'last_page' => $history->lastPage(),
+                'per_page' => $history->perPage(),
+            ],
+        ]);
+    }
+
+    public function typeCatalogue(): JsonResponse
+    {
+        return response()->json([
+            'categories' => AssetCategory::query()
+                ->withCount('types')
+                ->orderBy('code')
+                ->get()
+                ->map(fn (AssetCategory $category): array => [
+                    'id' => $category->id,
+                    'code' => $category->code,
+                    'name' => $category->name,
+                    'scheme' => $category->scheme,
+                    'types_count' => $category->types_count,
+                ])->values(),
+            'types' => AssetType::query()
+                ->with('category')
+                ->orderBy('asset_category_id')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (AssetType $type): array => [
+                    'id' => $type->id,
+                    'asset_category_id' => $type->asset_category_id,
+                    'name' => $type->name,
+                    'classification_code' => $type->classification_code,
+                    'description' => $type->description,
+                    'is_active' => (bool) $type->is_active,
+                    'category_code' => $type->category->code,
+                    'category_name' => $type->category->name,
+                    'category_scheme' => $type->category->scheme,
+                    'toggle_url' => route('admin.assets.types.toggle', $type),
+                ])->values(),
         ]);
     }
 
@@ -308,11 +393,11 @@ class AssetAdminController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.assets.index', ['tab' => 'perolehan'])
+        return redirect()->route('admin.dashboard')
             ->with('status', 'Hasil pemeriksaan perolehan berhasil dicatat.');
     }
 
-    public function reviewChangeRequest(Request $request, AssetChangeRequest $changeRequest): RedirectResponse
+    public function reviewChangeRequest(Request $request, AssetChangeRequest $changeRequest): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'decision' => ['required', Rule::in(['approved', 'needs_revision', 'rejected'])],
@@ -364,11 +449,19 @@ class AssetAdminController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.assets.index', ['tab' => 'perubahan'])
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Keputusan pengajuan perubahan berhasil dicatat.',
+                'change_request_id' => (int) $changeRequest->id,
+                'decision' => $data['decision'],
+            ]);
+        }
+
+        return redirect()->route('admin.dashboard')
             ->with('status', 'Keputusan pengajuan perubahan berhasil dicatat.');
     }
 
-    public function storeType(Request $request): RedirectResponse
+    public function storeType(Request $request): RedirectResponse|JsonResponse
     {
         $data = $request->validate([
             'asset_category_id' => ['required', 'exists:asset_categories,id'],
@@ -383,22 +476,35 @@ class AssetAdminController extends Controller
             ->exists();
 
         if ($duplicate) {
-            return back()->withErrors(['name' => 'Jenis barang dengan nama tersebut sudah ada pada kategori ini.'])->withInput();
+            $message = 'Jenis barang dengan nama tersebut sudah ada pada kategori ini.';
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message, 'errors' => ['name' => [$message]]], 422);
+            }
+
+            return back()->withErrors(['name' => $message])->withInput();
         }
 
         $data['name'] = trim($data['name']);
         $data['is_active'] = true;
         AssetType::query()->create($data);
 
-        return redirect()->route('admin.assets.index', ['tab' => 'jenis'])
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Master jenis barang berhasil ditambahkan.'], 201);
+        }
+
+        return redirect()->route('admin.dashboard')
             ->with('status', 'Master jenis barang berhasil ditambahkan.');
     }
 
-    public function toggleType(AssetType $type): RedirectResponse
+    public function toggleType(Request $request, AssetType $type): RedirectResponse|JsonResponse
     {
         $type->update(['is_active' => ! $type->is_active]);
+        $message = $type->is_active ? 'Jenis barang diaktifkan.' : 'Jenis barang dinonaktifkan.';
 
-        return redirect()->route('admin.assets.index', ['tab' => 'jenis'])
-            ->with('status', $type->is_active ? 'Jenis barang diaktifkan.' : 'Jenis barang dinonaktifkan.');
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message, 'is_active' => (bool) $type->is_active]);
+        }
+
+        return redirect()->route('admin.dashboard')->with('status', $message);
     }
 }

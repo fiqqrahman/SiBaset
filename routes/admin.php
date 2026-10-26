@@ -17,9 +17,11 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         Route::get('/notifikasi', [DashboardController::class, 'notifications'])->name('notifications');
 
         Route::prefix('aset')->name('assets.')->group(function () {
-            Route::get('/', [AssetAdminController::class, 'index'])->name('index');
             Route::get('/sekolah/{school}/data', [AssetAdminController::class, 'schoolAssets'])->name('school-data');
             Route::get('/sekolah/{school}/perolehan', [AssetAdminController::class, 'schoolAcquisitions'])->name('school-acquisitions');
+            Route::get('/sekolah/{school}/perubahan', [AssetAdminController::class, 'schoolChanges'])->name('school-changes');
+            Route::get('/sekolah/{school}/riwayat', [AssetAdminController::class, 'schoolHistory'])->name('school-history');
+            Route::get('/jenis/data', [AssetAdminController::class, 'typeCatalogue'])->name('types.catalogue');
             Route::post('/perolehan/{acquisition}/review', [AssetAdminController::class, 'reviewAcquisition'])->name('acquisitions.review');
             Route::post('/perubahan/{changeRequest}/review', [AssetAdminController::class, 'reviewChangeRequest'])->name('changes.review');
             Route::post('/jenis', [AssetAdminController::class, 'storeType'])->name('types.store');

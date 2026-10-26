@@ -183,7 +183,7 @@ test('admin review records BMD ownership separately from the school and asset st
         'decision' => AssetAcquisition::STATUS_VERIFIED_BMD,
         'verified_owner_entity' => 'pemkot',
         'review_note' => 'BAST dan dokumen kepemilikan telah diperiksa.',
-    ])->assertRedirect(route('admin.assets.index', ['tab' => 'perolehan']));
+    ])->assertRedirect(route('admin.dashboard'));
 
     expect($acquisition->refresh()->ownership_status)->toBe(AssetAcquisition::STATUS_VERIFIED_BMD)
         ->and($asset->refresh()->status)->toBe(Asset::STATUS_APPROVED)
@@ -222,7 +222,7 @@ test('approved asset changes remain pending until an admin approves them', funct
     $this->actingAs($admin)->post(route('admin.assets.changes.review', $change), [
         'decision' => 'approved',
         'review_note' => 'Perubahan diperiksa.',
-    ])->assertRedirect(route('admin.assets.index', ['tab' => 'perubahan']));
+    ])->assertRedirect(route('admin.dashboard'));
 
     expect($asset->refresh()->condition)->toBe('rusak_ringan')
         ->and($asset->location)->toBe('Ruang B')
@@ -306,11 +306,11 @@ test('admin map inventory endpoint returns only assets for the selected school',
         ->assertJsonMissing(['code' => 'MAP-B-001']);
 });
 
-test('operator cannot access the admin asset verification queue', function () {
+test('operator cannot access the admin asset catalogue endpoint', function () {
     $school = createSchoolForAssetInventoryTest('91000012', 'SMP Sekolah Operator');
     $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
 
-    $this->actingAs($operator)->get(route('admin.assets.index'))->assertForbidden();
+    $this->actingAs($operator)->getJson(route('admin.assets.types.catalogue'))->assertForbidden();
 });
 
 
@@ -396,4 +396,151 @@ test('admin notification feed includes asset events and current school context',
         ->assertJsonPath('data.0.actor_name', $operator->name)
         ->assertJsonPath('data.0.target', 'asset')
         ->assertJsonPath('meta.pending_count', 1);
+});
+
+test('admin school change requests endpoint only returns changes for the selected school', function () {
+    $schoolA = createSchoolForAssetInventoryTest('91000030', 'SMP Perubahan A');
+    $schoolB = createSchoolForAssetInventoryTest('91000031', 'SMP Perubahan B');
+    $operatorA = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolA->id]);
+    $operatorB = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolB->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisitionA = createAssetAcquisitionForInventoryTest($schoolA, $operatorA, [
+        'ownership_status' => AssetAcquisition::STATUS_VERIFIED_BMD,
+        'owner_entity' => 'pemkot',
+        'reviewed_by' => $admin->id,
+        'reviewed_at' => now(),
+    ]);
+    $acquisitionB = createAssetAcquisitionForInventoryTest($schoolB, $operatorB, [
+        'ownership_status' => AssetAcquisition::STATUS_VERIFIED_BMD,
+        'owner_entity' => 'pemkot',
+        'reviewed_by' => $admin->id,
+        'reviewed_at' => now(),
+    ]);
+    $assetA = createAssetForInventoryTest($schoolA, $operatorA, $acquisitionA, [
+        'asset_code' => 'CHANGE-SCHOOL-A',
+        'status' => Asset::STATUS_APPROVED,
+    ]);
+    $assetB = createAssetForInventoryTest($schoolB, $operatorB, $acquisitionB, [
+        'asset_code' => 'CHANGE-SCHOOL-B',
+        'status' => Asset::STATUS_APPROVED,
+    ]);
+    AssetChangeRequest::query()->create([
+        'asset_id' => $assetA->id,
+        'submitted_by' => $operatorA->id,
+        'proposed_changes' => ['condition' => 'rusak_ringan', 'location' => 'Gudang A'],
+        'request_note' => 'Perubahan untuk sekolah A.',
+        'status' => 'pending',
+    ]);
+    AssetChangeRequest::query()->create([
+        'asset_id' => $assetB->id,
+        'submitted_by' => $operatorB->id,
+        'proposed_changes' => ['condition' => 'rusak_berat', 'location' => 'Gudang B'],
+        'request_note' => 'Perubahan untuk sekolah B.',
+        'status' => 'pending',
+    ]);
+    $this->actingAs($admin)
+        ->getJson(route('admin.assets.school-changes', $schoolA))
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.school_id', $schoolA->id)
+        ->assertJsonPath('data.0.asset_code', 'CHANGE-SCHOOL-A')
+        ->assertJsonMissing(['asset_code' => 'CHANGE-SCHOOL-B']);
+});
+
+test('admin school history endpoint only returns reviewed acquisitions for the selected school', function () {
+    $schoolA = createSchoolForAssetInventoryTest('91000032', 'SMP Riwayat A');
+    $schoolB = createSchoolForAssetInventoryTest('91000033', 'SMP Riwayat B');
+    $operatorA = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolA->id]);
+    $operatorB = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $schoolB->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisitionA = createAssetAcquisitionForInventoryTest($schoolA, $operatorA, [
+        'ownership_status' => AssetAcquisition::STATUS_VERIFIED_BMD,
+        'owner_entity' => 'pemkot',
+        'document_reference' => 'HISTORY-SCHOOL-A',
+        'reviewed_by' => $admin->id,
+        'reviewed_at' => now(),
+    ]);
+    $acquisitionB = createAssetAcquisitionForInventoryTest($schoolB, $operatorB, [
+        'ownership_status' => AssetAcquisition::STATUS_VERIFIED_NON_BMD,
+        'owner_entity' => 'yayasan',
+        'document_reference' => 'HISTORY-SCHOOL-B',
+        'reviewed_by' => $admin->id,
+        'reviewed_at' => now(),
+    ]);
+    $assetA = createAssetForInventoryTest($schoolA, $operatorA, $acquisitionA, [
+        'asset_code' => 'HISTORY-A-001',
+        'status' => Asset::STATUS_APPROVED,
+    ]);
+    createAssetForInventoryTest($schoolB, $operatorB, $acquisitionB, [
+        'asset_code' => 'HISTORY-B-001',
+        'status' => Asset::STATUS_APPROVED,
+    ]);
+    AssetEvent::query()->create([
+        'asset_id' => $assetA->id,
+        'asset_acquisition_id' => $acquisitionA->id,
+        'actor_id' => $admin->id,
+        'event_type' => 'acquisition_reviewed',
+        'details' => ['decision' => AssetAcquisition::STATUS_VERIFIED_BMD, 'review_note' => 'Dokumen sesuai.'],
+        'created_at' => now(),
+    ]);
+    $this->actingAs($admin)
+        ->getJson(route('admin.assets.school-history', $schoolA))
+        ->assertOk()
+        ->assertJsonPath('meta.total', 1)
+        ->assertJsonPath('data.0.document_reference', 'HISTORY-SCHOOL-A')
+        ->assertJsonPath('data.0.owner_entity', 'pemkot')
+        ->assertJsonPath('data.0.events.0.decision', AssetAcquisition::STATUS_VERIFIED_BMD)
+        ->assertJsonMissing(['document_reference' => 'HISTORY-SCHOOL-B']);
+});
+
+
+test('admin can review a school asset change through the modal JSON endpoint', function () {
+    $school = createSchoolForAssetInventoryTest('91000034', 'SMP Perubahan JSON');
+    $operator = User::factory()->create(['role' => 'operator_sekolah', 'school_id' => $school->id]);
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+    $acquisition = createAssetAcquisitionForInventoryTest($school, $operator, [
+        'ownership_status' => AssetAcquisition::STATUS_VERIFIED_BMD,
+        'owner_entity' => 'pemkot',
+        'reviewed_by' => $admin->id,
+        'reviewed_at' => now(),
+    ]);
+    $asset = createAssetForInventoryTest($school, $operator, $acquisition, [
+        'asset_code' => 'CHANGE-JSON-001',
+        'status' => Asset::STATUS_APPROVED,
+        'condition' => 'baik',
+        'location' => 'Ruang A',
+    ]);
+    $change = AssetChangeRequest::query()->create([
+        'asset_id' => $asset->id,
+        'submitted_by' => $operator->id,
+        'proposed_changes' => ['condition' => 'rusak_ringan', 'location' => 'Ruang B', 'notes' => 'Perbaikan meja'],
+        'request_note' => 'Data perlu diperbarui.',
+        'status' => 'pending',
+    ]);
+
+    $this->actingAs($admin)
+        ->postJson(route('admin.assets.changes.review', $change), [
+            'decision' => 'approved',
+            'review_note' => 'Perubahan sesuai hasil pemeriksaan.',
+        ])
+        ->assertOk()
+        ->assertJsonPath('decision', 'approved')
+        ->assertJsonPath('change_request_id', $change->id);
+
+    expect($change->refresh()->status)->toBe('approved')
+        ->and($asset->refresh()->condition)->toBe('rusak_ringan')
+        ->and($asset->location)->toBe('Ruang B');
+});
+
+test('admin can load the shared asset type catalogue as JSON', function () {
+    $admin = User::factory()->create(['role' => 'admin', 'school_id' => null]);
+
+    $this->actingAs($admin)
+        ->getJson(route('admin.assets.types.catalogue'))
+        ->assertOk()
+        ->assertJsonStructure([
+            'categories' => [['id', 'code', 'name', 'scheme', 'types_count']],
+            'types' => [['id', 'name', 'is_active', 'category_code', 'category_name', 'toggle_url']],
+        ])
+        ->assertJsonFragment(['name' => 'Laptop']);
 });
